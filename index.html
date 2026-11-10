@@ -998,7 +998,7 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.4 (11/11/2026)";var PT={};
+var APP_VERSION="1.4.1 (11/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -1413,11 +1413,22 @@ function qReport(first){
 }
 function qPlace(){
   if(!Q.geo||!window.fetch)return;var g=Q.geo;
-  fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=vi&lat="+g.lat+"&lon="+g.lng).then(function(r){return r.json()}).then(function(j){
-    if(Q.geo!==g)return;var a=j.address||{};
+  var setName=function(nm){
+    if(!nm||Q.geo!==g)return;Q.place=nm;
+    if(Q.pinIdx>=0&&S.pins[Q.pinIdx])S.pins[Q.pinIdx].name=nm;save();if(typeof renderPins==="function")renderPins();qReport(false);
+  };
+  var photon=function(){
+    fetch("https://photon.komoot.io/reverse?limit=1&lat="+g.lat+"&lon="+g.lng).then(function(r){return r.json()}).then(function(j){
+      var p=(j.features&&j.features[0]&&j.features[0].properties)||{};
+      var road=p.street||(p.type==="street"?p.name:"");
+      setName([road,p.locality||p.district||p.city].filter(Boolean).join(", "));
+    }).catch(function(){});
+  };
+  fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=vi&lat="+g.lat+"&lon="+g.lng).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+    var a=j.address||{};
     var nm=[a.road||a.pedestrian||a.footway,a.quarter||a.suburb||a.neighbourhood||a.village||a.town||a.city_district].filter(Boolean).join(", ");
-    if(nm){Q.place=nm;if(Q.pinIdx>=0&&S.pins[Q.pinIdx])S.pins[Q.pinIdx].name=nm;save();if(typeof renderPins==="function")renderPins();qReport(false)}
-  }).catch(function(){});
+    if(nm)setName(nm);else photon();
+  }).catch(photon);
 }
 function initQuick(){
   var cv=$("qCanvas"),drag=null;
