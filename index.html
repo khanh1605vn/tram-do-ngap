@@ -998,7 +998,7 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.4.1 (11/11/2026)";var PT={};
+var APP_VERSION="1.4.2 (11/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -1514,7 +1514,7 @@ function initQuick(){
 }
 // in thước đo ngập theo kích thước thật
 function printGauge(){
-  var G=gaugeCfg(),total=G.band*G.n,per=Math.max(1,Math.floor(25/G.band)),strips=Math.ceil(G.n/per),html="";
+  var G=gaugeCfg(),total=G.band*G.n,per=Math.max(1,Math.floor(22/G.band)),strips=Math.ceil(G.n/per),html="";
   for(var s=0;s<strips;s++){
     var from=s*per,to=Math.min(G.n,from+per),hgt=(to-from)*G.band,bands="",labels="";
     for(var b=from;b<to;b++){bands+='<div style="height:'+G.band+'cm;background:'+(b%2===0?"#e6007e":"#ffe600")+'"></div>'}
