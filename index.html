@@ -1150,16 +1150,27 @@ function initMap(){
     map=L.map("map").setView(S.center,15);
     // Khi mở app từ tệp trên máy (file://), trình duyệt không gửi Referer:
     // máy chủ OpenStreetMap và CARTO trả về ô bị chặn. Các nền dưới đây đã kiểm tra hiển thị được.
-    var web=/^https?:$/.test(location.protocol);
+    // (Ô của tile.openstreetmap.org cũng bị lỗi khi thử trên GitHub Pages, nên không dùng.)
     var BASES=[];
-    if(web)BASES.push(["Bản đồ OpenStreetMap",L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"})]);
     BASES.push(["Bản đồ đường phố",L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles © Esri"})]);
     BASES.push(["Ảnh vệ tinh",L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles © Esri — Maxar, Earthstar Geographics"})]);
     BASES.push(["Địa hình (OpenTopoMap)",L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{subdomains:"abc",maxZoom:17,attribution:"© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)"})]);
     var baseObj={};BASES.forEach(function(b){baseObj[b[0]]=b[1]});
-    var cur=BASES[0][1].addTo(map),okTiles=0,badTiles=0;
-    var watch=function(t){t.on("tileload",function(){okTiles++});t.on("tileerror",function(){badTiles++;if(okTiles===0&&badTiles>=8)offline()})};
-    BASES.forEach(function(b){watch(b[1])});
+    var bi=0,okTiles=0,badTiles=0;
+    BASES[0][1].addTo(map);
+    // nền đang dùng lỗi liên tục mà chưa tải được ô nào -> chuyển nền kế tiếp, hết nền -> sơ đồ lưới
+    BASES.forEach(function(b,i){
+      b[1].on("tileload",function(){if(i===bi)okTiles++});
+      b[1].on("tileerror",function(){
+        if(i!==bi)return;badTiles++;
+        if(okTiles===0&&badTiles>=6){
+          var nx=bi+1;
+          if(nx<BASES.length){map.removeLayer(BASES[bi][1]);bi=nx;okTiles=0;badTiles=0;BASES[bi][1].addTo(map)}
+          else offline();
+        }
+      });
+    });
+    map.on("baselayerchange",function(e){BASES.forEach(function(b,i){if(b[1]===e.layer){bi=i;okTiles=0;badTiles=0}})});
     L.control.layers(baseObj,null,{collapsed:false,position:"topright"}).addTo(map);
     $("mapNote").textContent="Chọn nền ở góc phải bản đồ. Kéo để di chuyển, dùng nút + / − để phóng to.";
     layer=L.layerGroup().addTo(map);
