@@ -733,7 +733,20 @@ th{color:var(--muted);font-weight:600}
 #map{height:380px;border-radius:var(--radius);border:1px solid var(--line)}
 #mapFallback{display:none;height:340px;border-radius:var(--radius);border:1px dashed var(--line);background:repeating-linear-gradient(0deg,transparent 0 39px,var(--line) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,var(--line) 39px 40px);position:relative;cursor:crosshair}
 #mapFallback .pin{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid #fff;transform:translate(-50%,-50%)}
-canvas#photo{max-width:100%;border-radius:10px;border:1px solid var(--line);touch-action:manipulation;display:none}
+.ptool .stage{position:relative;margin-top:10px;display:none}
+.ptool .stage canvas.ph{width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);touch-action:none;cursor:crosshair}
+.ptool .loupe{position:absolute;top:8px;left:8px;width:130px;height:130px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.45);display:none;pointer-events:none;background:#000}
+.ptool .cam{position:relative;margin-top:10px;display:none;background:#000;border-radius:12px;overflow:hidden}
+.ptool .cam video{width:100%;display:block;max-height:70vh;object-fit:contain;background:#000}
+.ptool .guide{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(50% - 1px),rgba(255,255,255,.55) calc(50% - 1px),rgba(255,255,255,.55) calc(50% + 1px),transparent calc(50% + 1px)),linear-gradient(0deg,transparent calc(33.3% - 1px),rgba(255,255,255,.3) calc(33.3% - 1px),rgba(255,255,255,.3) 33.3%,transparent 33.3%,transparent calc(66.6% - 1px),rgba(255,255,255,.3) calc(66.6% - 1px),rgba(255,255,255,.3) 66.6%,transparent 66.6%)}
+.ptool .level{position:absolute;top:8px;left:8px;right:8px;text-align:center;font-size:.85rem;font-weight:600;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff}
+.ptool .level.good{background:rgba(31,138,76,.85)}
+.ptool .camBar{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:10px}
+.ptool .shutter{width:64px;height:64px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.35);cursor:pointer}
+.ptool .camBtn{border:0;border-radius:999px;padding:8px 14px;background:rgba(0,0,0,.6);color:#fff;font:inherit;cursor:pointer;align-self:center}
+.ptool .meas{margin-top:8px;font-size:.92rem}
+.ptool .stepHint{font-weight:600;color:var(--brand);margin:8px 0 0}
+.ptool input[type=file]{display:none}
 .muted{color:var(--muted);font-size:.88rem}
 footer{text-align:center;color:var(--muted);font-size:.8rem;padding:10px 16px 30px}
 svg text{font-family:inherit}
@@ -788,11 +801,8 @@ svg text{font-family:inherit}
         <div><label for="aL2">ℓ′ – thẻ tỉ lệ trên ảnh</label><input id="aL2" inputmode="decimal" placeholder="vd 2,5"></div>
         <div><label for="aP2">p′ – phần còn nổi trên ảnh</label><input id="aP2" inputmode="decimal" placeholder="vd 21"></div>
       </div>
-      <h3>Đo trực tiếp trên ảnh (tuỳ chọn)</h3>
-      <p class="muted">Tải ảnh lên, chạm lần lượt: 2 đầu thẻ tỉ lệ, rồi 2 đầu phần vật mốc còn nổi. Ảnh chỉ xử lý trên máy này, không tải lên mạng.</p>
-      <div class="row noprint"><input type="file" id="aFile" accept="image/*" style="max-width:260px"><button class="btn ghost" id="aReset" type="button">Chạm lại</button></div>
-      <p class="muted" id="aHint"></p>
-      <canvas id="photo"></canvas>
+      <h3>Chụp và đo ngay trên app</h3>
+      <div class="ptool noprint" id="ptA"></div>
       <div class="row" style="margin-top:12px"><button class="btn" id="aCalc" type="button">Tính độ sâu</button></div>
       <div class="err" id="aErr"></div>
       <div class="steps" id="aSteps" hidden></div>
@@ -814,6 +824,8 @@ svg text{font-family:inherit}
         <div><label for="bAxis">Vị trí trục bánh xe</label>
           <select id="bAxis"><option value="up">Trục còn nổi (thấy trục)</option><option value="down">Trục đã chìm</option></select></div>
       </div>
+      <h3>Chụp và đo ngay trên app</h3>
+      <div class="ptool noprint" id="ptB"></div>
       <div class="row" style="margin-top:12px"><button class="btn" id="bCalc" type="button">Tính độ sâu</button></div>
       <div class="err" id="bErr"></div>
       <div class="warn" id="bWarn"></div>
@@ -836,6 +848,8 @@ svg text{font-family:inherit}
         <div><label for="cRef">Góc đo so với</label>
           <select id="cRef"><option value="v">Phương thẳng đứng (α)</option><option value="h">Mặt đường (β)</option></select></div>
       </div>
+      <h3>Chụp và đo ngay trên app</h3>
+      <div class="ptool noprint" id="ptC"></div>
       <div class="row" style="margin-top:12px"><button class="btn" id="cCalc" type="button">Tính độ sâu</button></div>
       <div class="err" id="cErr"></div>
       <div class="steps" id="cSteps" hidden></div>
@@ -895,6 +909,7 @@ svg text{font-family:inherit}
       <div class="row noprint" style="margin-top:10px">
         <button class="btn ghost" id="mCsv" type="button">Xuất CSV điểm ngập</button>
         <button class="btn ghost" id="mPrint" type="button">In / lưu PDF bản đồ</button>
+        <button class="btn ghost" id="mRetry" type="button">Tải lại bản đồ</button>
       </div>
     </div>
     <div class="card"><h2>Danh sách điểm ngập</h2><div class="scroll"><table id="mTable"></table></div></div>
@@ -921,7 +936,8 @@ svg text{font-family:inherit}
     </div>
   </section>
 </main>
-<footer>Trạm đo ngập bỏ túi · Học liệu STEM Toán 9 · GV Vũ Đặng Bảo Khánh, Trường THCS Tân Bình</footer>
+<footer>Trạm đo ngập bỏ túi · Học liệu STEM Toán 9 · GV Vũ Đặng Bảo Khánh, Trường THCS Tân Bình<br>Phiên bản <span id="ver"></span></footer>
+<div id="newVer" class="noprint" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:2000;background:var(--brand);color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 4px 16px rgba(0,0,0,.3)">Đã có phiên bản mới của app. <button class="btn" id="newVerBtn" type="button" style="background:#fff;color:#0a6aa1;margin-left:8px">Tải bản mới</button></div>
 
 <script>/* Leaflet 1.9.4 (BSD-2-Clause), nhúng sẵn để không phụ thuộc CDN */
 /* @preserve
@@ -934,6 +950,7 @@ svg text{font-family:inherit}
 <script>
 (function(){
 "use strict";
+var APP_VERSION="1.3 (11/11/2026)";
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -997,34 +1014,170 @@ function calcA(){
 }
 $("aCalc").onclick=calcA;
 
-// photo tool
-var cv=$("photo"),ctx=cv.getContext("2d"),img=null,pts=[];
-var HINTS=["Chạm đầu thứ nhất của thẻ tỉ lệ","Chạm đầu thứ hai của thẻ tỉ lệ","Chạm đỉnh phần vật mốc còn nổi","Chạm điểm vật mốc gặp mặt nước","Đã đo xong: ℓ′ và p′ được điền theo điểm ảnh."];
-function drawPhoto(){
-  if(!img)return;ctx.drawImage(img,0,0,cv.width,cv.height);
-  var lw=Math.max(2,cv.width/300);
-  pts.forEach(function(p,i){ctx.fillStyle=i<2?"#ffcc00":"#00d0ff";ctx.beginPath();ctx.arc(p.x,p.y,lw*3,0,7);ctx.fill()});
-  ctx.lineWidth=lw;
-  if(pts.length>=2){ctx.strokeStyle="#ffcc00";ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);ctx.stroke()}
-  if(pts.length>=4){ctx.strokeStyle="#00d0ff";ctx.beginPath();ctx.moveTo(pts[2].x,pts[2].y);ctx.lineTo(pts[3].x,pts[3].y);ctx.stroke()}
-  $("aHint").textContent=HINTS[Math.min(pts.length,4)];
-}
-$("aFile").onchange=function(e){
-  var f=e.target.files&&e.target.files[0];if(!f)return;
-  var url=URL.createObjectURL(f);img=new Image();
-  img.onload=function(){var maxW=1400,s=Math.min(1,maxW/img.width);cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);cv.style.display="block";pts=[];drawPhoto()};
-  img.src=url;
+// ---------- công cụ chụp ảnh và đo trên ảnh (dùng chung cho A, B, C) ----------
+var PT_STEPS={
+  A:["Chạm đầu thứ nhất của thẻ tỉ lệ","Chạm đầu thứ hai của thẻ tỉ lệ","Chạm đỉnh phần vật mốc còn nổi","Chạm điểm vật mốc gặp mặt nước"],
+  B:["Chạm đầu thứ nhất của thẻ tỉ lệ","Chạm đầu thứ hai của thẻ tỉ lệ","Chạm điểm A: mặt nước cắt vành bánh xe bên trái","Chạm điểm B: mặt nước cắt vành bánh xe bên phải"],
+  C:["Chạm đầu thứ nhất của thẻ tỉ lệ","Chạm đầu thứ hai của thẻ tỉ lệ","Chạm đỉnh vật mốc (đầu còn nổi)","Chạm điểm vật mốc gặp mặt nước"]
 };
-cv.addEventListener("click",function(e){
-  if(!img||pts.length>=4)return;
-  var r=cv.getBoundingClientRect();pts.push({x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height});
-  if(pts.length===4){
-    var dist=function(a,b){return Math.hypot(a.x-b.x,a.y-b.y)};
-    $("aL2").value=fmt(dist(pts[0],pts[1]),1);$("aP2").value=fmt(dist(pts[2],pts[3]),1);
+var PT_INTRO={
+  A:"Đặt thẻ tỉ lệ sát vật mốc, đứng ở nơi khô ráo, giữ máy thẳng rồi chụp. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi đỉnh và chân phần vật mốc còn nổi.",
+  B:"Đặt thẻ tỉ lệ sát bánh xe, chụp thẳng vào mặt bánh xe. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi 2 điểm mặt nước cắt vành bánh xe.",
+  C:"Đặt thẻ tỉ lệ dọc theo vật mốc, chụp thẳng. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi đỉnh vật mốc và điểm vật mốc gặp mặt nước. App đo phần còn nổi và góc nghiêng so với phương thẳng đứng."
+};
+var camStream=null,camOwner=null;
+function stopCam(){
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop()});camStream=null}
+  if(camOwner){camOwner.camBox.style.display="none";camOwner=null}
+  window.removeEventListener("deviceorientation",onTilt);
+}
+var tiltEl=null;
+function onTilt(e){
+  if(!tiltEl||e.beta==null)return;
+  var portrait=window.innerHeight>=window.innerWidth;
+  var roll=portrait?e.gamma:(e.beta),pitch=portrait?(e.beta-90):(Math.abs(e.gamma)-90);
+  var ok=Math.abs(roll)<=4&&Math.abs(pitch)<=8;
+  tiltEl.className="level"+(ok?" good":"");
+  tiltEl.textContent=ok?"Máy đang thẳng – có thể chụp":"Giữ máy thẳng: nghiêng trái/phải "+fmtS(Math.round(roll))+"°, ngả trước/sau "+fmtS(Math.round(pitch))+"°";
+}
+function PhotoTool(rootId,mode){
+  var root=$(rootId),T=this;
+  root.innerHTML=
+    '<p class="muted">'+PT_INTRO[mode]+' Ảnh chỉ xử lý trên máy này, không tải lên mạng.</p>'+
+    (mode!=="A"?'<div style="max-width:240px"><label>ℓ – độ dài thật thẻ tỉ lệ (cm)</label><input class="ptL" inputmode="decimal" value="10"></div>':'')+
+    '<div class="row" style="margin-top:8px"><button class="btn ptCam" type="button">Mở camera</button>'+
+    '<button class="btn ghost ptPick" type="button">Chọn ảnh có sẵn</button>'+
+    '<button class="btn ghost ptReset" type="button" style="display:none">Chạm lại</button>'+
+    '<button class="btn ghost ptSave" type="button" style="display:none">Lưu ảnh</button></div>'+
+    '<input type="file" class="ptFile" accept="image/*"><input type="file" class="ptCap" accept="image/*" capture="environment">'+
+    '<p class="err ptErr"></p>'+
+    '<div class="cam"><video playsinline muted autoplay></video><div class="guide"></div><div class="level">Đang mở camera…</div>'+
+    '<div class="camBar"><button class="camBtn ptClose" type="button">Đóng</button><button class="shutter ptShot" type="button" aria-label="Chụp ảnh"></button><button class="camBtn ptFlip" type="button">Đổi camera</button></div></div>'+
+    '<p class="stepHint ptHint"></p>'+
+    '<div class="stage"><canvas class="ph"></canvas><canvas class="loupe" width="260" height="260"></canvas></div>'+
+    '<div class="meas ptMeas"></div>';
+  var q=function(c){return root.querySelector(c)};
+  T.camBox=q(".cam");var video=q("video"),stage=q(".stage"),cv=q("canvas.ph"),lp=q("canvas.loupe"),ctx=cv.getContext("2d"),lctx=lp.getContext("2d");
+  var img=null,pts=[],drag=-1,facing="environment";
+  var err=function(m){var e=q(".ptErr");e.textContent=m||"";e.classList.toggle("on",!!m)};
+  var cssScale=function(){var r=cv.getBoundingClientRect();return r.width?cv.width/r.width:1};
+
+  function loadSource(src,w,h){
+    var maxS=1600,s=Math.min(1,maxS/Math.max(w,h));
+    cv.width=Math.round(w*s);cv.height=Math.round(h*s);
+    img=src;pts=[];stage.style.display="block";q(".ptReset").style.display="";q(".ptSave").style.display="";
+    q(".ptMeas").textContent="";draw();
+    setTimeout(function(){stage.scrollIntoView({behavior:"smooth",block:"start"})},50);
   }
-  drawPhoto();
-});
-$("aReset").onclick=function(){pts=[];drawPhoto()};
+  function draw(){
+    if(!img)return;
+    ctx.drawImage(img,0,0,cv.width,cv.height);
+    var k=cssScale(),r=7*k,lw=2.5*k;
+    ctx.lineWidth=lw;
+    if(pts.length>=2){ctx.strokeStyle="#ffcc00";ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);ctx.stroke()}
+    if(pts.length>=4){ctx.strokeStyle="#00d0ff";ctx.beginPath();ctx.moveTo(pts[2].x,pts[2].y);ctx.lineTo(pts[3].x,pts[3].y);ctx.stroke()}
+    pts.forEach(function(p,i){
+      ctx.fillStyle=i<2?"#ffcc00":"#00d0ff";ctx.strokeStyle="#000";ctx.lineWidth=1.5*k;
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,7);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#000";ctx.font="bold "+Math.round(10*k)+"px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(i+1),p.x,p.y+0.5*k);
+    });
+    q(".ptHint").textContent=pts.length<4?("Bước "+(pts.length+1)+"/4: "+PT_STEPS[mode][pts.length]+". Giữ ngón tay và kéo để chỉnh cho chính xác."):"Đã đủ 4 điểm. Kéo điểm để chỉnh, hoặc bấm “Chạm lại”.";
+  }
+  function loupe(p,clientX,rect){
+    lp.style.display="block";
+    lp.style.left=(clientX-rect.left<rect.width/2)?"auto":"8px";lp.style.right=(clientX-rect.left<rect.width/2)?"8px":"auto";
+    var zoom=3,srcW=lp.width/zoom*cssScale()/2;
+    lctx.fillStyle="#000";lctx.fillRect(0,0,lp.width,lp.height);
+    // vẽ từ ảnh gốc (không có dấu chấm) để thấy rõ chỗ cần chạm
+    var iw=img.naturalWidth||img.width,f=iw/cv.width,s2=srcW*f;
+    lctx.drawImage(img,p.x*f-s2/2,p.y*f-s2/2,s2,s2,0,0,lp.width,lp.height);
+    lctx.strokeStyle="#ff3b30";lctx.lineWidth=2;lctx.beginPath();
+    lctx.moveTo(lp.width/2,lp.height/2-22);lctx.lineTo(lp.width/2,lp.height/2+22);lctx.moveTo(lp.width/2-22,lp.height/2);lctx.lineTo(lp.width/2+22,lp.height/2);lctx.stroke();
+  }
+  function toImg(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height,r:r}}
+  cv.addEventListener("pointerdown",function(e){
+    if(!img)return;e.preventDefault();
+    var p=toImg(e),k=cssScale(),best=-1,bd=30*k;
+    pts.forEach(function(o,i){var d=Math.hypot(o.x-p.x,o.y-p.y);if(d<bd){bd=d;best=i}});
+    if(best<0){if(pts.length>=4)return;pts.push({x:p.x,y:p.y});best=pts.length-1}
+    drag=best;try{cv.setPointerCapture(e.pointerId)}catch(_){}
+    draw();loupe(pts[drag],e.clientX,p.r);
+  });
+  cv.addEventListener("pointermove",function(e){
+    if(drag<0)return;e.preventDefault();
+    var p=toImg(e);pts[drag].x=Math.max(0,Math.min(cv.width,p.x));pts[drag].y=Math.max(0,Math.min(cv.height,p.y));
+    draw();loupe(pts[drag],e.clientX,p.r);
+  });
+  var up=function(){if(drag<0)return;drag=-1;lp.style.display="none";draw();if(pts.length===4)apply()};
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+
+  function apply(){
+    var d=function(a,b){return Math.hypot(a.x-b.x,a.y-b.y)};
+    var card=d(pts[0],pts[1]),seg=d(pts[2],pts[3]);
+    if(card<3){q(".ptMeas").textContent="Hai đầu thẻ tỉ lệ quá gần nhau, hãy chạm lại.";return}
+    if(mode==="A"){
+      $("aL2").value=fmt(card,1);$("aP2").value=fmt(seg,1);
+      q(".ptMeas").textContent="Đã điền ℓ′ = "+fmt(card,1)+" và p′ = "+fmt(seg,1)+" (đơn vị: điểm ảnh).";
+      if(num($("aH").value)>0)calcA();else q(".ptMeas").textContent+=" Nhập H rồi bấm “Tính độ sâu”.";
+    }else{
+      var l=num(q(".ptL").value);if(!(l>0)){q(".ptMeas").textContent="Nhập độ dài thật của thẻ tỉ lệ ℓ.";return}
+      var k=l/card;
+      if(mode==="B"){
+        $("bC").value="";$("bC2").value=fmt(seg,1);$("bK").value=fmt(k,4);
+        q(".ptMeas").textContent="k = "+fmtS(l)+" : "+fmt(card,1)+" ≈ "+fmt(k,4)+" cm/điểm ảnh; dây cung c ≈ "+fmt(k*seg)+" cm.";
+        if(num($("bR").value)>0||num($("bD").value)>0)calcB();else q(".ptMeas").textContent+=" Nhập R hoặc D rồi bấm “Tính độ sâu”.";
+      }else{
+        var vis=k*seg,dx=Math.abs(pts[3].x-pts[2].x),dy=Math.abs(pts[3].y-pts[2].y),ang=Math.atan2(dx,dy)*180/Math.PI;
+        $("cVis").value=fmt(vis);$("cAng").value=fmt(ang);$("cRef").value="v";$("cL").value="";
+        q(".ptMeas").textContent="Phần còn nổi ≈ "+fmt(vis)+" cm; góc nghiêng so với phương thẳng đứng α ≈ "+fmt(ang)+"°.";
+        if(num($("cTot").value)>0)calcC();else q(".ptMeas").textContent+=" Nhập chiều dài vật mốc rồi bấm “Tính độ sâu”.";
+      }
+    }
+  }
+  q(".ptReset").onclick=function(){pts=[];q(".ptMeas").textContent="";draw()};
+  q(".ptSave").onclick=function(){
+    try{var a=document.createElement("a");a.href=cv.toDataURL("image/jpeg",0.9);a.download="tram-do-ngap-"+mode+"-"+Date.now()+".jpg";document.body.appendChild(a);a.click();a.remove()}catch(_){err("Không lưu được ảnh trên trình duyệt này.")}
+  };
+  function fromFile(f){
+    if(!f)return;var url=URL.createObjectURL(f),im=new Image();
+    im.onload=function(){loadSource(im,im.naturalWidth,im.naturalHeight)};im.onerror=function(){err("Không đọc được ảnh này.")};im.src=url;
+  }
+  q(".ptFile").onchange=function(e){err("");fromFile(e.target.files&&e.target.files[0]);e.target.value=""};
+  q(".ptCap").onchange=function(e){err("");fromFile(e.target.files&&e.target.files[0]);e.target.value=""};
+  q(".ptPick").onclick=function(){stopCam();q(".ptFile").click()};
+
+  function startStream(){
+    return navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}}}).then(function(s){
+      if(camStream)camStream.getTracks().forEach(function(t){t.stop()});
+      camStream=s;video.srcObject=s;return video.play();
+    });
+  }
+  q(".ptCam").onclick=function(){
+    err("");
+    var can=window.isSecureContext&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+    if(!can){q(".ptCap").click();return}       // mở camera của máy (vẫn chụp trực tiếp, không cần vào thư viện ảnh)
+    stopCam();camOwner=T;T.camBox.style.display="block";tiltEl=q(".level");tiltEl.className="level";tiltEl.textContent="Đang mở camera…";
+    try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function"){DeviceOrientationEvent.requestPermission().catch(function(){})}}catch(_){}
+    window.addEventListener("deviceorientation",onTilt);
+    startStream().then(function(){
+      if(tiltEl.textContent==="Đang mở camera…")tiltEl.textContent="Giữ máy thẳng, đưa thẻ tỉ lệ và vật mốc vào khung rồi bấm nút tròn";
+      T.camBox.scrollIntoView({behavior:"smooth",block:"start"});
+    }).catch(function(ex){
+      stopCam();
+      err("Không mở được camera trong app ("+(ex&&ex.name==="NotAllowedError"?"chưa cho phép dùng camera":"trình duyệt không hỗ trợ")+"). Bấm lại “Mở camera” để dùng camera của máy, hoặc cấp quyền camera cho trang này trong cài đặt trình duyệt.");
+      q(".ptCam").onclick=function(){err("");q(".ptCap").click()};
+    });
+  };
+  q(".ptFlip").onclick=function(){facing=facing==="environment"?"user":"environment";startStream().catch(function(){})};
+  q(".ptClose").onclick=function(){stopCam()};
+  q(".ptShot").onclick=function(){
+    var w=video.videoWidth,h=video.videoHeight;if(!w||!h)return;
+    var c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(video,0,0,w,h);
+    stopCam();loadSource(c,w,h);
+  };
+  window.addEventListener("resize",function(){if(img)draw()});
+}
+
 
 // ---------- method B ----------
 function calcB(){
@@ -1153,16 +1306,16 @@ function initMap(){
     // (Ô của tile.openstreetmap.org cũng bị lỗi khi thử trên GitHub Pages, nên không dùng.)
     var BASES=[];
     BASES.push(["Bản đồ đường phố",L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles © Esri"})]);
+    BASES.push(["Đường phố (máy chủ dự phòng)",L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles © Esri"})]);
     BASES.push(["Ảnh vệ tinh",L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles © Esri — Maxar, Earthstar Geographics"})]);
     BASES.push(["Địa hình (OpenTopoMap)",L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{subdomains:"abc",maxZoom:17,attribution:"© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)"})]);
     var baseObj={};BASES.forEach(function(b){baseObj[b[0]]=b[1]});
-    var bi=0,okTiles=0,badTiles=0;
-    BASES[0][1].addTo(map);
+    BASES[0][1].addTo(map);mapBases=BASES;
     // nền đang dùng lỗi liên tục mà chưa tải được ô nào -> chuyển nền kế tiếp, hết nền -> sơ đồ lưới
     BASES.forEach(function(b,i){
-      b[1].on("tileload",function(){if(i===bi)okTiles++});
+      b[1].on("tileload",function(){if(i===bi){okTiles++;mapStatus()}});
       b[1].on("tileerror",function(){
-        if(i!==bi)return;badTiles++;
+        if(i!==bi)return;badTiles++;mapStatus();
         if(okTiles===0&&badTiles>=6){
           var nx=bi+1;
           if(nx<BASES.length){map.removeLayer(BASES[bi][1]);bi=nx;okTiles=0;badTiles=0;BASES[bi][1].addTo(map)}
@@ -1172,21 +1325,35 @@ function initMap(){
     });
     map.on("baselayerchange",function(e){BASES.forEach(function(b,i){if(b[1]===e.layer){bi=i;okTiles=0;badTiles=0}})});
     L.control.layers(baseObj,null,{collapsed:false,position:"topright"}).addTo(map);
-    $("mapNote").textContent="Chọn nền ở góc phải bản đồ. Kéo để di chuyển, dùng nút + / − để phóng to.";
+    mapStatus();
     layer=L.layerGroup().addTo(map);
+    setTimeout(function(){map.invalidateSize()},300);
+    window.addEventListener("resize",function(){if(map)map.invalidateSize()});
     map.on("click",function(e){addPin(e.latlng.lat,e.latlng.lng,null,null)});
   }else{
     offline();
   }
   renderPins();
 }
-var offlineOn=false;
+var offlineOn=false,fbBound=false,mapBases=[],bi=0,okTiles=0,badTiles=0;
+function mapStatus(){
+  if(offlineOn||!mapBases.length)return;
+  $("mapNote").textContent="Nền: "+mapBases[bi][0]+" · đã tải "+okTiles+" ô"+(badTiles?" · "+badTiles+" ô lỗi":"")+". Chọn nền khác ở góc phải bản đồ nếu cần.";
+}
 function offline(){
   if(offlineOn)return;offlineOn=true;
   $("map").style.display="none";$("mapFallback").style.display="block";
-  $("mapNote").textContent="Không tải được bản đồ trực tuyến, đang dùng sơ đồ lưới ngoại tuyến. Có thể vẽ sơ đồ khu vực quanh trường lên giấy và đối chiếu ô lưới.";
-  $("mapFallback").addEventListener("click",function(e){var r=this.getBoundingClientRect();addPin(null,null,(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height)});
+  $("mapNote").textContent="Không tải được bản đồ trực tuyến (kiểm tra mạng), đang dùng sơ đồ lưới ngoại tuyến. Khi có mạng, bấm “Tải lại bản đồ”.";
+  if(!fbBound){fbBound=true;$("mapFallback").addEventListener("click",function(e){var r=this.getBoundingClientRect();addPin(null,null,(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height)})}
   renderPins();
+}
+function retryMap(){
+  if(!window.L)return;
+  if(!map){mapReady=false;offlineOn=false;$("map").style.display="";$("mapFallback").style.display="none";initMap();return}
+  offlineOn=false;$("map").style.display="";$("mapFallback").style.display="none";
+  mapBases.forEach(function(b){if(map.hasLayer(b[1]))map.removeLayer(b[1])});
+  bi=0;okTiles=0;badTiles=0;mapBases[0][1].addTo(map);
+  setTimeout(function(){map.invalidateSize();mapBases[0][1].redraw()},100);mapStatus();renderPins();
 }
 function renderPins(){
   if(layer)layer.clearLayers();
@@ -1237,6 +1404,7 @@ $("mFindBtn").onclick=function(){
 $("mFind").addEventListener("keydown",function(e){if(e.key==="Enter")$("mFindBtn").click()});
 $("mCsv").onclick=function(){var r=[["Duong/doan duong","Muc","Do sau (cm)","Nguon","Vi do","Kinh do"]];S.pins.forEach(function(p){r.push([p.name,p.lv,p.dep==null?"":p.dep,p.src,p.lat==null?"":p.lat.toFixed(5),p.lng==null?"":p.lng.toFixed(5)])});download("diem-ngap-"+(S.cls||"lop")+".csv",csv(r))};
 $("mPrint").onclick=function(){window.print()};
+$("mRetry").onclick=retryMap;
 
 // ---------- settings ----------
 function fillCfg(){$("gHx").value=fmtS(S.hx);$("gClass").value=S.cls;$("gEdges").value=S.edges.map(fmtS).join("; ");$("gTarget").value=fmtS(S.target);$("gUnrel").value=fmtS(S.unrel);$("gCenter").value=S.center.join("; ")}
@@ -1256,6 +1424,18 @@ $("gWipe").onclick=function(){
 };
 
 fillCfg();renderHome();
+$("ver").textContent=APP_VERSION;
+// trình duyệt điện thoại có thể giữ bản cũ: kiểm tra bản trên máy chủ
+if(/^https?:$/.test(location.protocol)&&window.fetch){
+  fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){
+    var m=t.match(/APP_VERSION="([^"]+)"/);
+    if(m&&m[1]!==APP_VERSION){$("newVer").style.display="block";$("newVerBtn").onclick=function(){location.replace(location.pathname+"?v="+encodeURIComponent(m[1]))}}
+  }).catch(function(){});
+}
+new PhotoTool("ptA","A");new PhotoTool("ptB","B");new PhotoTool("ptC","C");
+// rời màn hình nào thì tắt camera
+Array.prototype.forEach.call(document.querySelectorAll("[data-go]"),function(b){b.addEventListener("click",stopCam)});
+document.addEventListener("visibilitychange",function(){if(document.hidden)stopCam()});
 // expose for tests
 window.__tram={calcA:calcA,calcB:calcB,calcC:calcC,state:function(){return S}};
 })();
