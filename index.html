@@ -673,28 +673,28 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --bg:#f4f7fa; --card:#ffffff; --ink:#1b2733; --muted:#5b6b7a; --line:#d9e1e8;
   --brand:#0a6aa1; --brand-2:#e3f1f9;
   --green:#1f8a4c; --green-bg:#e3f5ea; --yellow:#a86b00; --yellow-bg:#fff3d6; --red:#c0392b; --red-bg:#fde7e4;
-  --radius:14px;
+  --radius:14px;--on-brand:#ffffff;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0f1720; --card:#17222d; --ink:#e6edf3; --muted:#9fb0bf; --line:#2a3a48;
-    --brand:#4fb3e8; --brand-2:#14303f;
+    --brand:#4fb3e8; --brand-2:#14303f; --on-brand:#062233;
     --green:#5fd08f; --green-bg:#163526; --yellow:#f0c05a; --yellow-bg:#3a2e12; --red:#ff8a7a; --red-bg:#3e1c18;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0f1720; --card:#17222d; --ink:#e6edf3; --muted:#9fb0bf; --line:#2a3a48;
-  --brand:#4fb3e8; --brand-2:#14303f;
+  --brand:#4fb3e8; --brand-2:#14303f; --on-brand:#062233;
   --green:#5fd08f; --green-bg:#163526; --yellow:#f0c05a; --yellow-bg:#3a2e12; --red:#ff8a7a; --red-bg:#3e1c18;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-header{background:var(--brand);color:#fff;padding:14px 16px 10px}
+header{background:#0a6aa1;color:#fff;padding:14px 16px 10px}
 header h1{margin:0;font-size:1.25rem}
 header p{margin:2px 0 0;font-size:.9rem;opacity:.9}
 nav{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1000}
 nav button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}
-nav button[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+nav button[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
 main{max-width:760px;margin:0 auto;padding:16px}
 section.screen{display:none}
 section.screen.on{display:block}
@@ -708,7 +708,7 @@ section.screen.on{display:block}
 label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:3px}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--brand);color:#fff}
+.btn{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--brand);color:var(--on-brand)}
 .btn.ghost{background:var(--brand-2);color:var(--brand)}
 .btn.danger{background:var(--red-bg);color:var(--red)}
 .methods{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -751,6 +751,15 @@ th{color:var(--muted);font-weight:600}
 footer{text-align:center;color:var(--muted);font-size:.8rem;padding:10px 16px 30px}
 svg text{font-family:inherit}
 @media print{nav,header,.noprint{display:none!important} body{background:#fff}}
+#pgWrap{display:none}
+body.pg>*:not(#pgWrap){display:none!important}
+body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height:100vh}
+@media print{body.pg #pgWrap{padding:0} @page{size:A4;margin:1cm}}
+.cta{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#0a6aa1;color:#fff;border-color:transparent}
+.cta h2{color:#fff}.cta p{margin:0;opacity:.92}
+.cta .btn{background:#fff;color:#0a6aa1}
+.chk{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:.95rem;margin:10px 0 2px}
+.chk input{width:auto}
 .leaflet-control-layers{color:#222;font-size:.85rem}
 .leaflet-control-layers label{display:block;margin:2px 0;color:#222;font-size:.85rem;cursor:pointer}
 .leaflet-control-layers input{width:auto;padding:0;margin:0 6px 0 0;border:0;vertical-align:middle}
@@ -763,6 +772,7 @@ svg text{font-family:inherit}
 </header>
 <nav id="nav" role="tablist">
   <button data-go="home" aria-selected="true">Trang chủ</button>
+  <button data-go="quick">Chụp nhanh</button>
   <button data-go="A">Phương pháp A</button>
   <button data-go="B">Phương pháp B</button>
   <button data-go="C">Phương pháp C</button>
@@ -775,6 +785,10 @@ svg text{font-family:inherit}
 
   <!-- HOME -->
   <section class="screen on" id="s-home">
+    <div class="card cta">
+      <div><h2>Chụp nhanh – app tự đo và cảnh báo</h2><p>Chụp thước đo ngập, app tự ước lượng độ sâu nước, báo mức Xanh, Vàng, Đỏ và ghim cảnh báo tại vị trí chụp.</p></div>
+      <button class="btn" data-go="quick" type="button">Chụp ngay</button>
+    </div>
     <div class="card">
       <h2>Chọn phương pháp đo</h2>
       <p class="muted">Mỗi phương pháp dùng một vật mốc có kích thước biết trước. Kết quả được phân thành ba mức: Xanh, Vàng, Đỏ.</p>
@@ -787,6 +801,36 @@ svg text{font-family:inherit}
     <div class="card">
       <h2>Ngưỡng cảnh báo hiện tại</h2>
       <div id="thresholdInfo"></div>
+    </div>
+  </section>
+
+  <!-- QUICK -->
+  <section class="screen" id="s-quick">
+    <div class="card">
+      <h2>Chụp nhanh – app tự ước lượng độ ngập</h2>
+      <p class="muted">Dùng cùng thước đo ngập in sẵn (các vạch hồng sẫm và vàng xen kẽ) dán thẳng đứng trên cột hoặc tường, mép dưới sát mặt đường. Đứng ở nơi khô ráo, chụp sao cho thấy cả đỉnh thước và mặt nước. App tự tìm thước, đọc mực nước, báo mức cảnh báo và ghim điểm tại vị trí chụp.</p>
+      <label class="chk"><input type="checkbox" id="qGeo" checked> Gắn vị trí chụp (GPS) vào điểm cảnh báo</label>
+      <p class="muted" id="qGeoMsg" style="margin:0 0 6px">Vị trí làm tròn khoảng 10 m, chỉ lưu trên máy này.</p>
+      <div class="row"><button class="btn" id="qCamBtn" type="button">Mở camera</button><button class="btn ghost" id="qPick" type="button">Chọn ảnh có sẵn</button><button class="btn ghost" id="qPrint" type="button">In thước đo ngập</button></div>
+      <input type="file" id="qFile" accept="image/*" hidden><input type="file" id="qCap" accept="image/*" capture="environment" hidden>
+      <div class="err" id="qErr"></div>
+      <div class="ptool"><div class="cam" id="qCam"><video id="qVideo" playsinline muted autoplay></video><div class="guide"></div><div class="level" id="qLevel"></div>
+        <div class="camBar"><button class="camBtn" id="qClose" type="button">Đóng</button><button class="shutter" id="qShot" type="button" aria-label="Chụp ảnh"></button><button class="camBtn" id="qFlip" type="button">Đổi camera</button></div></div></div>
+      <div id="qStage" style="display:none;margin-top:10px"><canvas id="qCanvas" style="width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);touch-action:none"></canvas></div>
+      <div class="result" id="qResult"></div>
+      <div class="row" id="qActions" style="display:none;margin-top:10px"><button class="btn" id="qMap" type="button">Xem trên bản đồ</button><button class="btn ghost" id="qShare" type="button">Gửi cảnh báo</button></div>
+      <div class="row" id="qTools" style="display:none;margin-top:8px"><button class="btn ghost" id="qRedo" type="button">Tự đo lại</button><button class="btn ghost" id="qManual" type="button">Đo bằng tay</button><button class="btn ghost" id="qSave" type="button">Lưu ảnh</button></div>
+      <p class="muted" id="qShareMsg"></p>
+    </div>
+    <div class="card">
+      <h2>Làm thước đo ngập</h2>
+      <ol>
+        <li>Bấm “In thước đo ngập”, in màu trên giấy A4 đúng tỉ lệ 100%. Mặc định thước cao 50 cm, gồm 10 vạch 5 cm (đổi được trong Cài đặt GV).</li>
+        <li>Cắt các đoạn, nối thành một dải liền, ép plastic để không ướt.</li>
+        <li>Dán thẳng đứng lên cột điện, chân tường hoặc bậc thềm nơi hay ngập, mép dưới (0 cm) sát mặt đường.</li>
+        <li>Khi ngập: đứng ở chỗ khô, chụp thẳng vào thước. Nước càng cao thì phần thước còn thấy càng ngắn: d = chiều cao thước − phần còn thấy.</li>
+      </ol>
+      <p class="muted">Thử trong lớp: đổi thước thành 10 vạch 1 cm, dán vào que đặt trong khay nước. Ảnh chụp chỉ xử lý trên máy, không tải lên mạng.</p>
     </div>
   </section>
 
@@ -889,7 +933,7 @@ svg text{font-family:inherit}
   <section class="screen" id="s-map">
     <div class="card">
       <h2>Bản đồ điểm ngập quanh trường</h2>
-      <p class="muted">Chạm lên bản đồ để ghim điểm. App không tự lấy vị trí của bạn. Ghi tên đường hoặc đoạn đường, không ghi số nhà.</p>
+      <p class="muted">Chạm lên bản đồ để ghim điểm, ghi tên đường hoặc đoạn đường, không ghi số nhà. Điểm chụp ở mục Chụp nhanh được ghim tự động tại vị trí chụp (nếu bật gắn vị trí).</p>
       <div class="grid noprint">
         <div><label for="mName">Tên đường / đoạn đường</label><input id="mName" placeholder="vd Đường ĐT743, đoạn gần chợ"></div>
         <div><label for="mLevel">Mức</label><select id="mLevel"><option value="auto">Lấy từ kết quả đo gần nhất</option><option>Xanh</option><option>Vàng</option><option>Đỏ</option></select></div>
@@ -926,6 +970,9 @@ svg text{font-family:inherit}
         <div><label for="gTarget">Tiêu chí đạt: δ dưới (%)</label><input id="gTarget" inputmode="decimal"></div>
         <div><label for="gUnrel">Cảnh báo kém tin cậy khi c ≥ … × R</label><input id="gUnrel" inputmode="decimal"></div>
         <div><label for="gCenter">Tâm bản đồ (vĩ độ; kinh độ)</label><input id="gCenter"></div>
+        <div><label for="gBand">Thước đo ngập: chiều cao mỗi vạch (cm)</label><input id="gBand" inputmode="decimal"></div>
+        <div><label for="gBandN">Thước đo ngập: số vạch</label><input id="gBandN" inputmode="numeric"></div>
+        <div><label for="gBandW">Thước đo ngập: bề rộng dải màu (cm)</label><input id="gBandW" inputmode="decimal"></div>
       </div>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="gSave" type="button">Lưu cài đặt</button>
@@ -937,6 +984,7 @@ svg text{font-family:inherit}
   </section>
 </main>
 <footer>Trạm đo ngập bỏ túi · Học liệu STEM Toán 9 · GV Vũ Đặng Bảo Khánh, Trường THCS Tân Bình<br>Phiên bản <span id="ver"></span></footer>
+<div id="pgWrap"><div class="row noprint" style="margin-bottom:12px"><button class="btn" type="button" onclick="window.print()">In</button><button class="btn ghost" type="button" onclick="document.body.classList.remove('pg')">Đóng</button></div><div id="printGauge"></div></div>
 <div id="newVer" class="noprint" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:2000;background:var(--brand);color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 4px 16px rgba(0,0,0,.3)">Đã có phiên bản mới của app. <button class="btn" id="newVerBtn" type="button" style="background:#fff;color:#0a6aa1;margin-left:8px">Tải bản mới</button></div>
 
 <script>/* Leaflet 1.9.4 (BSD-2-Clause), nhúng sẵn để không phụ thuộc CDN */
@@ -950,7 +998,7 @@ svg text{font-family:inherit}
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.3 (11/11/2026)";
+var APP_VERSION="1.4 (11/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -981,7 +1029,7 @@ function steps(id,txt){var e=$(id);e.hidden=!txt;e.textContent=txt||""}
 function hideRes(id){$(id).className="result"}
 
 // ---------- navigation ----------
-var screens=["home","A","B","C","lab","map","cfg"];
+var screens=["home","quick","A","B","C","lab","map","cfg"];
 function go(name){
   screens.forEach(function(s){$("s-"+s).classList.toggle("on",s===name)});
   Array.prototype.forEach.call(document.querySelectorAll("#nav button"),function(b){b.setAttribute("aria-selected",b.dataset.go===name?"true":"false")});
@@ -1176,8 +1224,300 @@ function PhotoTool(rootId,mode){
     stopCam();loadSource(c,w,h);
   };
   window.addEventListener("resize",function(){if(img)draw()});
+  T.load=function(c){err("");loadSource(c,c.width,c.height)};
 }
 
+
+// ---------- Chụp nhanh: tự nhận thước đo ngập, ước lượng độ sâu, cảnh báo tại vị trí chụp ----------
+function gaugeCfg(){var g=S.gauge||{};return {band:g.band>0?g.band:5,n:g.n>=2?g.n:10,w:g.w>0?g.w:3}}
+function rgb2hsv(r,g,b){
+  var mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,h=0;
+  if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360}
+  return [h,mx?d/mx:0,mx/255];
+}
+// 1 = hồng sẫm (magenta), 2 = vàng, 0 = khác
+function gaugeClass(r,g,b){
+  var t=rgb2hsv(r,g,b),h=t[0],s=t[1],v=t[2];
+  if(s>=0.33&&v>=0.28&&h>=285&&h<=350)return 1;
+  if(s>=0.40&&v>=0.38&&h>=38&&h<=72)return 2;
+  return 0;
+}
+function median(a){if(!a.length)return 0;var b=a.slice().sort(function(x,y){return x-y}),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2}
+// src: canvas ảnh gốc. Trả về toạ độ theo điểm ảnh của src.
+function detectGauge(src){
+  var G=gaugeCfg(),total=G.band*G.n;
+  var maxS=1000,sc=Math.min(1,maxS/Math.max(src.width,src.height));
+  var W=Math.max(1,Math.round(src.width*sc)),H=Math.max(1,Math.round(src.height*sc));
+  var wc=document.createElement("canvas");wc.width=W;wc.height=H;var wx=wc.getContext("2d");wx.drawImage(src,0,0,W,H);
+  var px=wx.getImageData(0,0,W,H).data,cls=new Uint8Array(W*H),i,j,x,y,r;
+  for(i=0,j=0;i<W*H;i++,j+=4)cls[i]=gaugeClass(px[j],px[j+1],px[j+2]);
+  // 1) tìm cột có cả 2 màu và đổi màu nhiều lần theo chiều dọc
+  var score=new Float32Array(W);
+  for(x=0;x<W;x++){
+    var m=0,yy=0,tr=0,last=0;
+    for(y=0;y<H;y++){var c=cls[y*W+x];if(c===1)m++;else if(c===2)yy++;if(c&&last&&c!==last)tr++;if(c)last=c}
+    score[x]=Math.min(m,yy)*(1+Math.min(tr,40));
+  }
+  var bx=0;for(x=1;x<W;x++)if(score[x]>score[bx])bx=x;
+  if(score[bx]<4)return {ok:false,msg:"Không thấy thước đo ngập (các vạch màu hồng sẫm và vàng xen kẽ) trong ảnh."};
+  var xl=bx,xr=bx,thr=score[bx]*0.3;
+  while(xl>0&&score[xl-1]>=thr)xl--;while(xr<W-1&&score[xr+1]>=thr)xr++;
+  var sw0=xr-xl+1,wl=Math.max(0,xl-2*sw0),wr=Math.min(W-1,xr+2*sw0);
+  // 2) theo dõi tâm dải màu từng hàng (thước có thể hơi nghiêng trong ảnh)
+  var rows=[];
+  for(y=0;y<H;y++){var n=0,sx=0;for(x=wl;x<=wr;x++){if(cls[y*W+x]){n++;sx+=x}}if(n>=Math.max(2,0.25*sw0))rows.push([y,sx/n,n])}
+  if(rows.length<6)return {ok:false,msg:"Thấy màu của thước nhưng quá ít, hãy chụp gần hơn."};
+  var fit=function(rs){var n=rs.length,my=0,mx=0;rs.forEach(function(q){my+=q[0];mx+=q[1]});my/=n;mx/=n;var a=0,d=0;rs.forEach(function(q){a+=(q[0]-my)*(q[1]-mx);d+=(q[0]-my)*(q[0]-my)});a=d?a/d:0;return [a,mx-a*my]};
+  var ab=fit(rows);
+  var inl=rows.filter(function(q){return Math.abs(q[1]-(ab[0]*q[0]+ab[1]))<=sw0});if(inl.length>=6)ab=fit(inl);
+  var sw=Math.max(2,Math.round(median(inl.map(function(q){return q[2]}))));
+  var cx=function(yv){return ab[0]*yv+ab[1]};
+  // 3) nhãn màu và độ đậm màu từng hàng trong cửa sổ bám theo dải
+  var lab=new Int8Array(H),chroma=new Float32Array(H);
+  for(y=0;y<H;y++){
+    var c0=Math.round(cx(y)-sw/2),c1=c0+sw-1,cm=0,cy=0,cs=0,nn=0;
+    for(x=Math.max(0,c0);x<=Math.min(W-1,c1);x++){var k=y*W+x,q=k*4;if(cls[k]===1)cm++;else if(cls[k]===2)cy++;cs+=Math.max(px[q],px[q+1],px[q+2])-Math.min(px[q],px[q+1],px[q+2]);nn++}
+    lab[y]=cm>=nn*0.4?1:(cy>=nn*0.4?2:0);chroma[y]=nn?cs/nn:0;
+  }
+  // 4) các đoạn cùng màu liên tiếp (lấp khe nhỏ)
+  var runs=[],y0=-1,cur=0,gap=0;
+  for(y=0;y<=H;y++){
+    var L=y<H?lab[y]:0;
+    if(L&&L===cur){gap=0;continue}
+    if(L===0&&cur){if(++gap<=2&&y<H)continue;runs.push({c:cur,s:y0,e:y-gap});cur=0;gap=0;continue}
+    if(L&&L!==cur){if(cur)runs.push({c:cur,s:y0,e:y-gap});cur=L;y0=y;gap=0}
+  }
+  runs=runs.filter(function(q){return q.e-q.s>=2});
+  if(!runs.length)return {ok:false,msg:"Thấy màu của thước nhưng không đọc được các vạch."};
+  var best=[],ch=[runs[0]];
+  for(r=1;r<runs.length;r++){
+    var a=ch[ch.length-1],b2=runs[r],lim=Math.max(4,0.35*median(ch.map(function(q){return q.e-q.s})));
+    if(b2.c!==a.c&&b2.s-a.e<=lim)ch.push(b2);else{if(ch.length>best.length)best=ch;ch=[b2]}
+  }
+  if(ch.length>best.length)best=ch;
+  if(best.length<2)return {ok:false,msg:"Chỉ thấy một vạch của thước, chưa đủ để tính. Hãy chụp gần hơn hoặc đo bằng tay."};
+  var b0=best[0],top=b0.s,chainEnd=best[best.length-1].e,water=chainEnd,why="cuối vạch thấy được",b0len=b0.e-b0.s;
+  // 5) mặt nước: màu vạch nhạt hẳn đi (bóng phản chiếu) hoặc hết vạch
+  var refRows=[];for(y=b0.s+1;y<b0.e-1;y++)refRows.push(chroma[y]);
+  var ref=median(refRows.length?refRows:[chroma[b0.s]]),need=Math.max(3,Math.round(0.12*b0len));
+  for(y=b0.e;y<chainEnd;y++){
+    var low=true;for(var t2=0;t2<need&&y+t2<H;t2++){if(chroma[y+t2]>=0.68*ref){low=false;break}}
+    if(low){water=y;why="mặt nước (màu vạch nhạt đi)";break}
+  }
+  var lens0=[b0len];
+  for(r=1;r<best.length;r++){
+    var R=best[r];if(R.s>=water)break;var len=Math.min(R.e,water)-R.s;
+    if(R.e<=water&&len>1.3*median(lens0)){var wy=R.s+len/2;if(wy<water){water=wy;why="vạch có bóng phản chiếu"}break}
+    if(R.e<=water)lens0.push(len);
+  }
+  // 6) tỉ lệ từ khoảng cách giữa đầu các vạch nằm trọn trên mặt nước
+  var full=best.filter(function(q){return q.e<=water-1}),per=[];
+  for(r=1;r<full.length;r++)per.push(full[r].s-full[r-1].s);
+  var bandPx=per.length?median(per):(full.length?full[0].e-full[0].s:0);
+  var conf=full.length>=3?"cao":(full.length>=2?"trung bình":"thấp");
+  var pxPerCm=bandPx/G.band,byWidth=sw/G.w;
+  if(!(pxPerCm>0)){pxPerCm=byWidth;conf="thấp"}
+  else if(Math.abs(byWidth-pxPerCm)/pxPerCm>0.45&&conf==="cao")conf="trung bình";
+  var tilt=Math.atan(ab[0])*180/Math.PI;
+  var k=1/sc;
+  return {ok:true,xl:(cx(top)-sw/2)*k,xr:(cx(top)+sw/2)*k,top:top*k,water:water*k,pxPerCm:pxPerCm*k,total:total,bands:full.length,conf:conf,why:why,tilt:tilt};
+}
+function gaugeDepth(r){var vis=(r.water-r.top)/r.pxPerCm;return Math.max(0,Math.min(r.total,r.total-vis))}
+
+// --- EXIF GPS (ảnh JPEG có sẵn) ---
+function exifGPS(buf){
+  try{
+    var v=new DataView(buf);if(v.getUint16(0)!==0xFFD8)return null;var o=2;
+    while(o<v.byteLength-4){
+      var mk=v.getUint16(o),sz=v.getUint16(o+2);
+      if(mk===0xFFE1&&v.getUint32(o+4)===0x45786966){
+        var t=o+10,le=v.getUint16(t)===0x4949,g16=function(p){return v.getUint16(p,le)},g32=function(p){return v.getUint32(p,le)};
+        var ifd=t+g32(t+4),ne=g16(ifd),gp=0;
+        for(var i=0;i<ne;i++){var e=ifd+2+i*12;if(g16(e)===0x8825)gp=t+g32(e+8)}
+        if(!gp)return null;
+        var n=g16(gp),out={};
+        for(i=0;i<n;i++){
+          var e2=gp+2+i*12,tag=g16(e2),off=t+g32(e2+8);
+          if(tag===1||tag===3)out[tag]=String.fromCharCode(v.getUint8(e2+8));
+          if(tag===2||tag===4){var a=[];for(var q=0;q<3;q++)a.push(g32(off+q*8)/(g32(off+q*8+4)||1));out[tag]=a[0]+a[1]/60+a[2]/3600}
+        }
+        if(out[2]==null||out[4]==null)return null;
+        return {lat:out[1]==="S"?-out[2]:out[2],lng:out[3]==="W"?-out[4]:out[4],acc:null,src:"ảnh"};
+      }
+      if((mk&0xFF00)!==0xFF00)break;o+=2+sz;
+    }
+  }catch(e){}
+  return null;
+}
+
+var Q={img:null,det:null,geo:null,pinIdx:-1,watch:null,lastFix:null,shotAt:null,place:""};
+function qEl(id){return $(id)}
+function qStartGeo(){
+  if(!$("qGeo").checked||!navigator.geolocation)return;
+  if(Q.watch!=null)return;
+  $("qGeoMsg").textContent="Đang lấy vị trí…";
+  Q.watch=navigator.geolocation.watchPosition(function(p){
+    Q.lastFix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy,t:Date.now(),src:"GPS"};
+    $("qGeoMsg").textContent="Đã có vị trí (sai số khoảng "+Math.round(p.coords.accuracy)+" m).";
+  },function(e){$("qGeoMsg").textContent=e.code===1?"Chưa cho phép dùng vị trí: điểm cảnh báo sẽ không có toạ độ. Có thể cấp quyền vị trí cho trang này trong cài đặt trình duyệt.":"Chưa lấy được vị trí, hãy ra chỗ thoáng hoặc bật định vị."},
+  {enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+}
+function qStopGeo(){if(Q.watch!=null&&navigator.geolocation){navigator.geolocation.clearWatch(Q.watch)}Q.watch=null}
+function round4(x){return Math.round(x*1e4)/1e4}
+
+function qLoad(canvas,geo){
+  Q.img=canvas;Q.geo=geo?{lat:round4(geo.lat),lng:round4(geo.lng),acc:geo.acc,src:geo.src}:null;Q.pinIdx=-1;Q.shotAt=new Date();Q.place="";
+  var cv=$("qCanvas");cv.width=canvas.width;cv.height=canvas.height;$("qStage").style.display="block";$("qTools").style.display="";
+  Q.det=detectGauge(canvas);
+  qDraw();qReport(true);
+  setTimeout(function(){$("qStage").scrollIntoView({behavior:"smooth",block:"start"})},60);
+}
+function qDraw(){
+  var cv=$("qCanvas"),c=cv.getContext("2d");c.drawImage(Q.img,0,0);
+  var d=Q.det;if(!d||!d.ok)return;
+  var r=cv.getBoundingClientRect(),k=r.width?cv.width/r.width:1;
+  c.lineWidth=2*k;c.setLineDash([6*k,4*k]);c.strokeStyle="#fff";c.strokeRect(d.xl,d.top,d.xr-d.xl,d.water-d.top);c.setLineDash([]);
+  var line=function(y,col,txt){
+    c.strokeStyle=col;c.lineWidth=3*k;c.beginPath();c.moveTo(0,y);c.lineTo(cv.width,y);c.stroke();
+    c.font="bold "+Math.round(14*k)+"px sans-serif";var tw=c.measureText(txt).width;
+    c.fillStyle="rgba(0,0,0,.6)";c.fillRect(6*k,y-22*k,tw+12*k,20*k);c.fillStyle="#fff";c.fillText(txt,12*k,y-7*k);
+    c.fillStyle=col;c.beginPath();c.arc(cv.width-18*k,y,9*k,0,7);c.fill();
+  };
+  line(d.top,"#ff2fb3","Đỉnh thước ("+fmtS(d.total)+" cm)");
+  line(d.water,"#1e90ff","Mặt nước – kéo để chỉnh");
+}
+function qReport(first){
+  var d=Q.det,box=$("qResult");
+  if(!d||!d.ok){
+    box.className="result on";box.style.background="var(--yellow-bg)";box.style.color="var(--ink)";
+    box.innerHTML="<b>Chưa tự đo được.</b> "+esc(d?d.msg:"")+"<br>Mẹo: chụp thẳng, thước nằm dọc khung hình, thấy rõ đỉnh thước; hoặc bấm “Đo bằng tay” để chạm điểm như phương pháp A.";
+    $("qActions").style.display="none";return;
+  }
+  box.style.background="";box.style.color="";
+  var dep=gaugeDepth(d),lv=level(dep),full=d.water-d.top<=d.pxPerCm*0.5;
+  box.className="result on "+lvClass(lv);
+  var where=Q.geo?("Vị trí chụp: "+(Q.place?esc(Q.place)+" · ":"")+Q.geo.lat.toFixed(4)+", "+Q.geo.lng.toFixed(4)+(Q.geo.acc?" (±"+Math.round(Q.geo.acc)+" m)":"")+(Q.geo.src==="ảnh"?" – lấy từ ảnh":"")):"Chưa có vị trí chụp.";
+  box.innerHTML='<div>Cảnh báo tại vị trí chụp</div><div class="big">'+(full?"d ≥ "+fmtS(d.total):"d ≈ "+fmt(dep))+' cm · Mức '+lv+'</div>'+
+    '<div>'+(dep<1?"Không thấy nước ngập tại thước.":ADV[lv])+'</div><div class="muted" style="color:inherit;opacity:.85;margin-top:6px">'+where+'<br>Đã đọc '+d.bands+' vạch, độ tin cậy '+d.conf+' ('+d.why+'). Ước lượng từ ảnh, có thể kéo đường xanh để chỉnh.</div>';
+  $("qActions").style.display="";
+  S.last={d:Math.round(dep*10)/10,method:"Thước",level:lv};
+  // lưu / cập nhật điểm cảnh báo tại vị trí chụp
+  if(Q.geo){
+    var name=Q.place||("Điểm chụp lúc "+Q.shotAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+" "+Q.shotAt.toLocaleDateString("vi-VN"));
+    var pin={name:name,lv:lv,dep:Math.round(dep*10)/10,src:"Ảnh chụp (tự đo)",lat:Q.geo.lat,lng:Q.geo.lng,fx:null,fy:null,t:Q.shotAt.getTime()};
+    if(Q.pinIdx>=0&&S.pins[Q.pinIdx]&&S.pins[Q.pinIdx].t===pin.t){pin.name=S.pins[Q.pinIdx].name;S.pins[Q.pinIdx]=pin}else{S.pins.push(pin);Q.pinIdx=S.pins.length-1}
+    save();if(typeof renderPins==="function")renderPins();
+    if(first&&!Q.place)qPlace();
+  }else save();
+  if(first&&navigator.vibrate&&lv!=="Xanh")try{navigator.vibrate(lv==="Đỏ"?[300,120,300,120,300]:[200,100,200])}catch(e){}
+}
+function qPlace(){
+  if(!Q.geo||!window.fetch)return;var g=Q.geo;
+  fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=vi&lat="+g.lat+"&lon="+g.lng).then(function(r){return r.json()}).then(function(j){
+    if(Q.geo!==g)return;var a=j.address||{};
+    var nm=[a.road||a.pedestrian||a.footway,a.quarter||a.suburb||a.neighbourhood||a.village||a.town||a.city_district].filter(Boolean).join(", ");
+    if(nm){Q.place=nm;if(Q.pinIdx>=0&&S.pins[Q.pinIdx])S.pins[Q.pinIdx].name=nm;save();if(typeof renderPins==="function")renderPins();qReport(false)}
+  }).catch(function(){});
+}
+function initQuick(){
+  var cv=$("qCanvas"),drag=null;
+  var toY=function(e){var r=cv.getBoundingClientRect();return (e.clientY-r.top)*cv.height/r.height};
+  cv.addEventListener("pointerdown",function(e){
+    var d=Q.det;if(!d||!d.ok)return;var y=toY(e),r=cv.getBoundingClientRect(),k=cv.height/r.height,tol=28*k;
+    var dw=Math.abs(y-d.water),dt=Math.abs(y-d.top);
+    if(dw<=tol&&dw<=dt)drag="water";else if(dt<=tol)drag="top";else return;
+    e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  cv.addEventListener("pointermove",function(e){
+    if(!drag)return;e.preventDefault();var d=Q.det,y=Math.max(0,Math.min(cv.height,toY(e)));
+    if(drag==="water")d.water=Math.max(d.top+1,y);else d.top=Math.min(d.water-1,y);
+    d.why="đã chỉnh bằng tay";qDraw();
+  });
+  var end=function(){if(!drag)return;drag=null;qReport(false)};
+  cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  window.addEventListener("resize",function(){if(Q.img)qDraw()});
+
+  var vid=$("qVideo"),facing="environment";
+  var start=function(){return navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}}}).then(function(s){if(camStream)camStream.getTracks().forEach(function(t){t.stop()});camStream=s;vid.srcObject=s;return vid.play()})};
+  var qOwner={camBox:$("qCam")};
+  $("qCamBtn").onclick=function(){
+    showErr("qErr","");qStartGeo();
+    var can=window.isSecureContext&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+    if(!can){$("qCap").click();return}
+    stopCam();camOwner=qOwner;$("qCam").style.display="block";tiltEl=$("qLevel");tiltEl.className="level";tiltEl.textContent="Đang mở camera…";
+    try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function")DeviceOrientationEvent.requestPermission().catch(function(){})}catch(_){}
+    window.addEventListener("deviceorientation",onTilt);
+    start().then(function(){if(tiltEl.textContent==="Đang mở camera…")tiltEl.textContent="Đưa cả thước đo ngập vào khung, thấy rõ đỉnh thước, rồi bấm nút tròn";$("qCam").scrollIntoView({behavior:"smooth",block:"start"})})
+    .catch(function(ex){stopCam();showErr("qErr","Không mở được camera trong app ("+(ex&&ex.name==="NotAllowedError"?"chưa cho phép dùng camera":"trình duyệt không hỗ trợ")+"). Bấm lại để dùng camera của máy.");$("qCamBtn").onclick=function(){showErr("qErr","");qStartGeo();$("qCap").click()}});
+  };
+  $("qFlip").onclick=function(){facing=facing==="environment"?"user":"environment";start().catch(function(){})};
+  $("qClose").onclick=function(){stopCam()};
+  $("qShot").onclick=function(){
+    var w=vid.videoWidth,h=vid.videoHeight;if(!w||!h)return;
+    var s=Math.min(1,1600/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext("2d").drawImage(vid,0,0,c.width,c.height);
+    stopCam();
+    var fix=Q.lastFix&&Date.now()-Q.lastFix.t<120000?Q.lastFix:null;
+    qLoad(c,$("qGeo").checked?fix:null);
+    if($("qGeo").checked&&!fix&&navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(function(p){if(Q.img===c){Q.geo={lat:round4(p.coords.latitude),lng:round4(p.coords.longitude),acc:p.coords.accuracy,src:"GPS"};qReport(false);qPlace()}},function(){},{enableHighAccuracy:true,timeout:20000,maximumAge:30000});
+    }
+  };
+  var fromFile=function(f,isCam){
+    if(!f)return;var rd=new FileReader();
+    rd.onload=function(){
+      var geo=$("qGeo").checked?exifGPS(rd.result):null;
+      var url=URL.createObjectURL(f),im=new Image();
+      im.onload=function(){
+        var s=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");
+        c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+        if(!geo&&isCam&&$("qGeo").checked&&Q.lastFix&&Date.now()-Q.lastFix.t<120000)geo=Q.lastFix;
+        qLoad(c,geo);
+        if(!geo&&$("qGeo").checked)$("qGeoMsg").textContent=isCam?"Chưa có vị trí cho ảnh này.":"Ảnh không kèm vị trí chụp, điểm cảnh báo không có toạ độ.";
+      };
+      im.onerror=function(){showErr("qErr","Không đọc được ảnh này.")};im.src=url;
+    };
+    rd.readAsArrayBuffer(f);
+  };
+  $("qFile").onchange=function(e){fromFile(e.target.files&&e.target.files[0],false);e.target.value=""};
+  $("qCap").onchange=function(e){fromFile(e.target.files&&e.target.files[0],true);e.target.value=""};
+  $("qPick").onclick=function(){stopCam();$("qFile").click()};
+  $("qGeo").onchange=function(){if(this.checked)qStartGeo();else{qStopGeo();$("qGeoMsg").textContent="Không gắn vị trí cho ảnh chụp."}};
+  $("qRedo").onclick=function(){if(Q.img){Q.det=detectGauge(Q.img);qDraw();qReport(false)}};
+  $("qSave").onclick=function(){try{var a=document.createElement("a");a.href=$("qCanvas").toDataURL("image/jpeg",0.9);a.download="canh-bao-ngap-"+Date.now()+".jpg";document.body.appendChild(a);a.click();a.remove()}catch(_){}};
+  $("qManual").onclick=function(){if(!Q.img)return;go("A");PT.A.load(Q.img);};
+  $("qMap").onclick=function(){
+    go("map");
+    setTimeout(function(){
+      if(map){map.invalidateSize();if(Q.geo)map.setView([Q.geo.lat,Q.geo.lng],17)}
+      $("map").scrollIntoView({behavior:"smooth",block:"center"});
+    },150);
+  };
+  $("qShare").onclick=function(){
+    var d=Q.det;if(!d||!d.ok)return;var dep=gaugeDepth(d),lv=level(dep);
+    var t="Cảnh báo ngập – mức "+lv+": nước sâu khoảng "+fmt(dep)+" cm"+(Q.place?" tại "+Q.place:"")+" ("+Q.shotAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+" "+Q.shotAt.toLocaleDateString("vi-VN")+"). "+ADV[lv];
+    var url=Q.geo?"https://www.google.com/maps?q="+Q.geo.lat+","+Q.geo.lng:"";
+    if(navigator.share){navigator.share({title:"Cảnh báo ngập",text:t+(url?" Vị trí: "+url:""),url:url||undefined}).catch(function(){})}
+    else{var full=t+(url?" Vị trí: "+url:"");try{navigator.clipboard.writeText(full);$("qShareMsg").textContent="Đã chép nội dung cảnh báo, dán vào Zalo hoặc Messenger để gửi."}catch(_){$("qShareMsg").textContent=full}}
+  };
+  $("qPrint").onclick=printGauge;
+}
+// in thước đo ngập theo kích thước thật
+function printGauge(){
+  var G=gaugeCfg(),total=G.band*G.n,per=Math.max(1,Math.floor(25/G.band)),strips=Math.ceil(G.n/per),html="";
+  for(var s=0;s<strips;s++){
+    var from=s*per,to=Math.min(G.n,from+per),hgt=(to-from)*G.band,bands="",labels="";
+    for(var b=from;b<to;b++){bands+='<div style="height:'+G.band+'cm;background:'+(b%2===0?"#e6007e":"#ffe600")+'"></div>'}
+    for(b=from;b<=to;b++){var val=total-b*G.band;labels+='<div style="position:absolute;left:0;top:calc('+((b-from)*G.band)+'cm - 7pt);font:bold 11pt Arial">— '+fmtS(val)+'</div>'}
+    html+='<div style="display:inline-block;vertical-align:top;margin:0 0.6cm 0 0;text-align:left">'+
+      '<div style="font:10pt Arial;margin-bottom:2mm">Đoạn '+(s+1)+'/'+strips+(s<strips-1?" (trên)":"")+'</div>'+
+      '<div style="display:flex"><div style="width:'+G.w+'cm;height:'+hgt+'cm;outline:0.3mm solid #000">'+bands+'</div><div style="position:relative;width:1.6cm;height:'+hgt+'cm">'+labels+'</div></div>'+
+      (s<strips-1?'<div style="font:9pt Arial;margin-top:1mm">Nối mép dưới với đầu đoạn '+(s+2)+'</div>':'<div style="font:9pt Arial;margin-top:1mm">Mép dưới đặt sát mặt đường (0 cm)</div>')+'</div>';
+  }
+  $("printGauge").innerHTML='<div style="font:bold 14pt Arial;margin-bottom:3mm">Thước đo ngập – Trạm đo ngập bỏ túi ('+fmtS(total)+' cm, mỗi vạch '+fmtS(G.band)+' cm)</div>'+
+   '<div style="font:10pt Arial;margin-bottom:5mm">In đúng kích thước thật (tỉ lệ 100%, không chọn \u201cvừa trang\u201d), in màu. Kiểm tra lại bằng thước kẻ. Ép plastic, dán thẳng đứng lên cột hoặc tường nơi hay ngập, đoạn 1 ở trên cùng.</div>'+html;
+  document.body.classList.add("pg");window.scrollTo(0,0);
+}
+function closeGauge(){document.body.classList.remove("pg")}
 
 // ---------- method B ----------
 function calcB(){
@@ -1407,7 +1747,7 @@ $("mPrint").onclick=function(){window.print()};
 $("mRetry").onclick=retryMap;
 
 // ---------- settings ----------
-function fillCfg(){$("gHx").value=fmtS(S.hx);$("gClass").value=S.cls;$("gEdges").value=S.edges.map(fmtS).join("; ");$("gTarget").value=fmtS(S.target);$("gUnrel").value=fmtS(S.unrel);$("gCenter").value=S.center.join("; ")}
+function fillCfg(){$("gHx").value=fmtS(S.hx);$("gClass").value=S.cls;$("gEdges").value=S.edges.map(fmtS).join("; ");$("gTarget").value=fmtS(S.target);$("gUnrel").value=fmtS(S.unrel);$("gCenter").value=S.center.join("; ");var G=gaugeCfg();$("gBand").value=fmtS(G.band);$("gBandN").value=G.n;$("gBandW").value=fmtS(G.w)}
 $("gSave").onclick=function(){
   var hx=num($("gHx").value),t=num($("gTarget").value),u=num($("gUnrel").value);
   var e=$("gEdges").value.split(/[;\s]+/).map(num).filter(function(x){return !isNaN(x)});
@@ -1416,6 +1756,9 @@ $("gSave").onclick=function(){
   if(!ok){$("gMsg").textContent="Kiểm tra lại: hₓ, tiêu chí > 0; hệ số kém tin cậy trong (0; 2]; các mốc sai số tăng dần, ngăn bằng dấu chấm phẩy.";return}
   S.hx=hx;S.target=t;S.unrel=u;S.edges=e;S.cls=$("gClass").value.trim();
   if(c.length===2&&!isNaN(c[0])&&!isNaN(c[1])){S.center=c;if(map)map.setView(c,15)}
+  var gb=num($("gBand").value),gn=Math.round(num($("gBandN").value)),gw=num($("gBandW").value);
+  if(!(gb>0&&gn>=2&&gn<=40&&gw>0)){$("gMsg").textContent="Thước đo ngập: chiều cao vạch, bề rộng phải lớn hơn 0; số vạch từ 2 đến 40.";return}
+  S.gauge={band:gb,n:gn,w:gw};
   save();$("gMsg").textContent="Đã lưu cài đặt.";renderHome();
 };
 $("gWipe").onclick=function(){
@@ -1432,12 +1775,12 @@ if(/^https?:$/.test(location.protocol)&&window.fetch){
     if(m&&m[1]!==APP_VERSION){$("newVer").style.display="block";$("newVerBtn").onclick=function(){location.replace(location.pathname+"?v="+encodeURIComponent(m[1]))}}
   }).catch(function(){});
 }
-new PhotoTool("ptA","A");new PhotoTool("ptB","B");new PhotoTool("ptC","C");
+PT={A:new PhotoTool("ptA","A"),B:new PhotoTool("ptB","B"),C:new PhotoTool("ptC","C")};initQuick();
 // rời màn hình nào thì tắt camera
-Array.prototype.forEach.call(document.querySelectorAll("[data-go]"),function(b){b.addEventListener("click",stopCam)});
+Array.prototype.forEach.call(document.querySelectorAll("[data-go]"),function(b){b.addEventListener("click",function(){stopCam();if(b.dataset.go!=="quick")qStopGeo()})});
 document.addEventListener("visibilitychange",function(){if(document.hidden)stopCam()});
 // expose for tests
-window.__tram={calcA:calcA,calcB:calcB,calcC:calcC,state:function(){return S}};
+window.__tram={calcA:calcA,calcB:calcB,calcC:calcC,detect:detectGauge,quick:function(){return Q},state:function(){return S}};
 })();
 </script>
 
