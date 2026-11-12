@@ -763,6 +763,19 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
 .leaflet-control-layers{color:#222;font-size:.85rem}
 .leaflet-control-layers label{display:block;margin:2px 0;color:#222;font-size:.85rem;cursor:pointer}
 .leaflet-control-layers input{width:auto;padding:0;margin:0 6px 0 0;border:0;vertical-align:middle}
+
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.lv-Na{background:#e9eef2;color:#4a5a66}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lv-Na{background:#26333d;color:#b8c7d2}}
+:root[data-theme="dark"] .lv-Na{background:#26333d;color:#b8c7d2}
+#mapFallback{position:relative;overflow:hidden}
+#mapFallback .pin span{position:absolute;left:50%;top:-19px;transform:translateX(-50%);font-size:.72rem;font-weight:700;color:var(--ink);background:var(--card);border-radius:6px;padding:0 4px;white-space:nowrap;pointer-events:none}
+.gridsvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.gl{position:absolute;transform:translate(-50%,-50%);font-size:.75rem;font-weight:600;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;pointer-events:none;white-space:nowrap}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.85rem;align-items:center}
+.tag{display:inline-block;font-size:.72rem;border:1px solid var(--line);border-radius:6px;padding:0 5px;color:var(--muted);white-space:nowrap}
+details summary{cursor:pointer;font-weight:600;color:var(--brand)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -799,8 +812,17 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
       </div>
     </div>
     <div class="card">
-      <h2>Ngưỡng cảnh báo hiện tại</h2>
-      <div id="thresholdInfo"></div>
+      <h2>Ngưỡng cảnh báo</h2>
+      <div class="row" role="group" aria-label="Chọn ngưỡng dùng cho kết quả tính">
+        <button class="btn ghost" type="button" data-mode="x">Đường thực tế · hₓ</button>
+        <button class="btn ghost" type="button" data-mode="k">Mô hình khay · hₖ</button>
+      </div>
+      <div id="thresholdInfo" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>Học liệu kèm theo</h2>
+      <p class="muted">Mô hình 3D trạm đo: 23 món vật liệu và dụng cụ, 33 bước lắp, bảng kiểm, rót nước 3 mực và góc chụp điện thoại. Không dùng số hiện trên mô hình 3D làm d₀.</p>
+      <div class="row"><a class="btn" href="https://khanh1605vn.github.io/tram-do-ngap/mo-hinh-3d.html" target="_blank" rel="noopener">Mở mô hình 3D</a><button class="btn ghost" type="button" id="hPrint">In thước đo ngập</button></div>
     </div>
   </section>
 
@@ -809,8 +831,8 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
     <div class="card">
       <h2>Chụp nhanh – app tự ước lượng độ ngập</h2>
       <p class="muted">Dùng cùng thước đo ngập in sẵn (các vạch hồng sẫm và vàng xen kẽ) dán thẳng đứng trên cột hoặc tường, mép dưới sát mặt đường. Đứng ở nơi khô ráo, chụp sao cho thấy cả đỉnh thước và mặt nước. App tự tìm thước, đọc mực nước, báo mức cảnh báo và ghim điểm tại vị trí chụp.</p>
-      <label class="chk"><input type="checkbox" id="qGeo" checked> Gắn vị trí chụp (GPS) vào điểm cảnh báo</label>
-      <p class="muted" id="qGeoMsg" style="margin:0 0 6px">Vị trí làm tròn khoảng 10 m, chỉ lưu trên máy này.</p>
+      <label class="chk"><input type="checkbox" id="qGeo"> Gắn vị trí chụp (GPS) vào điểm cảnh báo</label>
+      <p class="muted" id="qGeoMsg" style="margin:0 0 6px">Mặc định không gắn vị trí. Chỉ bật khi cần ghim cảnh báo tại chỗ chụp; vị trí làm tròn khoảng 10 m, chỉ lưu trên máy này.</p>
       <div class="row"><button class="btn" id="qCamBtn" type="button">Mở camera</button><button class="btn ghost" id="qPick" type="button">Chọn ảnh có sẵn</button><button class="btn ghost" id="qPrint" type="button">In thước đo ngập</button></div>
       <input type="file" id="qFile" accept="image/*" hidden><input type="file" id="qCap" accept="image/*" capture="environment" hidden>
       <div class="err" id="qErr"></div>
@@ -830,7 +852,7 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
         <li>Dán thẳng đứng lên cột điện, chân tường hoặc bậc thềm nơi hay ngập, mép dưới (0 cm) sát mặt đường.</li>
         <li>Khi ngập: đứng ở chỗ khô, chụp thẳng vào thước. Nước càng cao thì phần thước còn thấy càng ngắn: d = chiều cao thước − phần còn thấy.</li>
       </ol>
-      <p class="muted">Thử trong lớp: đổi thước thành 10 vạch 1 cm, dán vào que đặt trong khay nước. Ảnh chụp chỉ xử lý trên máy, không tải lên mạng.</p>
+      <p class="muted">Thử trên mô hình khay: vào Cài đặt GV, chọn mẫu “Thước khay 12 vạch × 1 cm” và dùng ngưỡng hₖ. Ảnh chụp chỉ xử lý trên máy, không tải lên mạng.</p>
     </div>
   </section>
 
@@ -905,27 +927,47 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
   <section class="screen" id="s-lab">
     <div class="card">
       <h2>Chế độ thử nghiệm trên khay nước</h2>
-      <p class="muted">Δ = |dₜ − d₀| ; δ = Δ : d₀ × 100%. dₜ là độ sâu tính từ ảnh, d₀ là độ sâu đo thật bằng thước.</p>
+      <p class="muted">Δ = |dₜ − d₀| ; δ = Δ : d₀ × 100%. dₜ là độ sâu tính từ ảnh, d₀ là độ sâu đo thật bằng thước. Màu dₜ / d₀ tô theo ngưỡng khay hₖ.</p>
       <div class="grid">
         <div><label for="lGroup">Mã nhóm</label><input id="lGroup" placeholder="vd N1"></div>
-        <div><label for="lLevel">Mực nước</label><select id="lLevel"><option>Mực 1</option><option>Mực 2</option><option>Mực 3</option></select></div>
+        <div><label for="lLevel">Mực nước</label><select id="lLevel"><option value="Khô">Ảnh khô (d₀ = 0)</option><option selected>Mực 1</option><option>Mực 2</option><option>Mực 3</option></select></div>
         <div><label for="lMethod">Phương pháp</label><select id="lMethod"><option value="A">A – trước và sau</option><option value="B">B – bánh xe</option><option value="C">C – hiệu chỉnh nghiêng</option></select></div>
+        <div><label for="lKind">Loại lượt</label><select id="lKind"><option>Ban đầu</option><option>Cải tiến</option></select></div>
         <div><label for="lDt">dₜ – độ sâu tính được (cm)</label><input id="lDt" inputmode="decimal"></div>
         <div><label for="lD0">d₀ – độ sâu đo thật (cm)</label><input id="lD0" inputmode="decimal"></div>
+        <div style="grid-column:1/-1"><label for="lNote">Dữ kiện hoặc điều chỉnh (không bắt buộc)</label><input id="lNote" placeholder="vd c = 12,45 cm · bổ sung ánh sáng"></div>
       </div>
+      <p class="muted" style="margin:6px 0 0">Lượt cải tiến được lưu riêng, không tính vào bảng tần số của lượt ban đầu. Ảnh khô có d₀ = 0: sai số tương đối không xác định.</p>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="lAdd" type="button">Thêm phép đo</button>
         <button class="btn ghost" id="lCsv" type="button">Xuất CSV</button>
+        <button class="btn ghost" id="lImp" type="button">Nhập CSV các nhóm</button>
+        <button class="btn ghost" id="lSample" type="button">Nạp dữ liệu mẫu (Phụ lục 6)</button>
       </div>
-      <div class="err" id="lErr"></div>
+      <input type="file" id="lFile" accept=".csv,text/csv" multiple hidden>
+      <div class="err" id="lErr"></div><p class="muted" id="lMsg" style="margin:8px 0 0"></p>
     </div>
     <div class="card">
-      <h2>Bảng tổng hợp cả lớp <span class="muted" id="lCount"></span></h2>
-      <div class="scroll"><table id="lTable"></table></div>
+      <h2>So sánh ba phương pháp</h2>
+      <p class="muted" id="lCmpNote" style="margin:0 0 6px"></p>
+      <div class="scroll" id="lCmp"></div>
     </div>
     <div class="card">
       <h2>Bảng tần số ghép nhóm của sai số tương đối δ</h2>
       <div class="scroll" id="lFreq"></div>
+    </div>
+    <div class="card">
+      <h2>Lượt cải tiến</h2>
+      <div class="scroll" id="lImpv"></div>
+    </div>
+    <div class="card">
+      <h2>Bảng tổng hợp cả lớp <span class="muted" id="lCount"></span></h2>
+      <div class="row noprint" style="margin-bottom:8px">
+        <label for="lFilter" style="margin:0">Lọc</label>
+        <select id="lFilter" style="width:auto"><option value="">Tất cả</option><option value="A">Phương pháp A</option><option value="B">Phương pháp B</option><option value="C">Phương pháp C</option><option value="ci">Lượt cải tiến</option></select>
+        <button class="btn ghost" id="lClearSample" type="button">Xoá dữ liệu mẫu</button>
+      </div>
+      <div class="scroll"><table id="lTable"></table></div>
     </div>
   </section>
 
@@ -933,13 +975,24 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
   <section class="screen" id="s-map">
     <div class="card">
       <h2>Bản đồ điểm ngập quanh trường</h2>
-      <p class="muted">Chạm lên bản đồ để ghim điểm, ghi tên đường hoặc đoạn đường, không ghi số nhà. Điểm chụp ở mục Chụp nhanh được ghim tự động tại vị trí chụp (nếu bật gắn vị trí).</p>
+      <p class="muted">Chạm lên bản đồ để ghim điểm. Ghi tên đường hoặc đoạn đường, không ghi số nhà. Mức xếp theo hₓ = <span id="mHx"></span> cm. Bản đồ lớp ghi lại quan sát đã qua, nên luôn kèm thời điểm và nguồn quan sát; để trống các đoạn chưa khảo sát.</p>
       <div class="grid noprint">
+        <div><label for="mCode">Mã điểm</label><input id="mCode" placeholder="vd P01"></div>
         <div><label for="mName">Tên đường / đoạn đường</label><input id="mName" placeholder="vd Đường ĐT743, đoạn gần chợ"></div>
-        <div><label for="mLevel">Mức</label><select id="mLevel"><option value="auto">Lấy từ kết quả đo gần nhất</option><option>Xanh</option><option>Vàng</option><option>Đỏ</option></select></div>
-        <div><label for="mDepth">Độ sâu (cm, nếu có)</label><input id="mDepth" inputmode="decimal"></div>
-        <div><label for="mSrc">Nguồn</label><select id="mSrc"><option>Đo bằng trạm</option><option>Khảo sát phụ huynh</option></select></div>
+        <div><label for="mDepth">Độ sâu (cm) – từ</label><input id="mDepth" inputmode="decimal" placeholder="vd 29"></div>
+        <div><label for="mDepth2">đến (cm, nếu là khoảng)</label><input id="mDepth2" inputmode="decimal" placeholder="vd 33"></div>
+        <div><label for="mLevel">Mức</label><select id="mLevel"><option value="auto">Tự xếp theo độ sâu</option><option>Xanh</option><option>Vàng</option><option>Đỏ</option><option>Chưa đủ dữ kiện</option></select></div>
+        <div><label for="mSrc">Nguồn quan sát</label><select id="mSrc"><option>Đo bằng trạm</option><option>Ảnh có thước chuẩn</option><option>Mô tả của phụ huynh</option><option>Khảo sát phụ huynh</option><option>Xác nhận khô</option></select></div>
+        <div><label for="mWhen">Thời điểm quan sát</label><input id="mWhen" placeholder="vd 17:30 ngày 12/11 hoặc T₀"></div>
+        <div><label for="mNote">Ghi chú</label><input id="mNote" placeholder="vd khoảng cắt qua mốc 30 cm"></div>
       </div>
+      <details class="noprint" style="margin-top:10px"><summary>Quy đổi mô tả của phụ huynh theo bánh xe</summary>
+        <div class="grid" style="margin-top:8px">
+          <div><label for="mPar">Phụ huynh mô tả</label><select id="mPar"><option value="">– chọn –</option><option value="a">(a) Nước chưa tới vành, chỉ ướt lốp</option><option value="b">(b) Nước tới khoảng 1/4 chiều cao bánh</option><option value="c">(c) Nước ngang trục bánh xe</option><option value="d">(d) Nước quá trục bánh xe</option></select></div>
+          <div><label for="mD">D – đường kính bánh xe (cm)</label><input id="mD" inputmode="decimal" placeholder="vd 60"></div>
+        </div>
+        <p class="muted" id="mParMsg" style="margin:6px 0 0">Nếu khoảng ước lượng cắt qua ranh giới màu, app ghi “Chưa đủ dữ kiện”.</p>
+      </details>
       <div class="noprint" style="margin-top:10px">
         <label for="mFind">Tìm đường hoặc khu vực để di chuyển bản đồ tới đó</label>
         <div class="row" style="flex-wrap:nowrap"><input id="mFind" placeholder="vd Bùi Thị Xuân, Tân Sơn Hòa"><button class="btn ghost" id="mFindBtn" type="button">Tìm</button></div>
@@ -948,13 +1001,18 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
       </div>
       <p class="muted" id="mHint" style="margin:8px 0">Điền thông tin rồi chạm lên bản đồ.</p>
       <div id="map"></div>
-      <div id="mapFallback" title="Sơ đồ ngoại tuyến"></div>
+      <div id="mapFallback" title="Sơ đồ lưới"></div>
+      <div class="legend" id="mLegend"></div>
       <p class="muted" id="mapNote"></p>
       <div class="row noprint" style="margin-top:10px">
+        <button class="btn ghost" id="mGrid" type="button">Sơ đồ lưới</button>
+        <button class="btn ghost" id="mSample" type="button">Sơ đồ tình huống mẫu P01–P08</button>
         <button class="btn ghost" id="mCsv" type="button">Xuất CSV điểm ngập</button>
+        <button class="btn ghost" id="mImp" type="button">Nhập CSV điểm ngập</button>
         <button class="btn ghost" id="mPrint" type="button">In / lưu PDF bản đồ</button>
         <button class="btn ghost" id="mRetry" type="button">Tải lại bản đồ</button>
       </div>
+      <input type="file" id="mFile" accept=".csv,text/csv" multiple hidden>
     </div>
     <div class="card"><h2>Danh sách điểm ngập</h2><div class="scroll"><table id="mTable"></table></div></div>
   </section>
@@ -964,9 +1022,11 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
     <div class="card">
       <h2>Cài đặt của giáo viên</h2>
       <div class="grid">
-        <div><label for="gHx">hₓ – ngưỡng nguy hiểm (cm)</label><input id="gHx" inputmode="decimal"></div>
+        <div><label for="gHx">hₓ – ngưỡng đường thực tế (cm)</label><input id="gHx" inputmode="decimal"></div>
+        <div><label for="gHk">hₖ – ngưỡng mô hình khay (cm)</label><input id="gHk" inputmode="decimal"></div>
+        <div><label for="gMode">Kết quả A, B, C và Chụp nhanh dùng</label><select id="gMode"><option value="x">hₓ – đường thực tế</option><option value="k">hₖ – mô hình khay</option></select></div>
         <div><label for="gClass">Mã lớp</label><input id="gClass" placeholder="vd 9A1"></div>
-        <div><label for="gEdges">Mốc các nhóm sai số (%)</label><input id="gEdges" placeholder="0;5;10;15;20;100"></div>
+        <div><label for="gEdges">Mốc các nhóm sai số (%), nhóm cuối đến +∞</label><input id="gEdges" placeholder="0; 5; 10; 15; 20"></div>
         <div><label for="gTarget">Tiêu chí đạt: δ dưới (%)</label><input id="gTarget" inputmode="decimal"></div>
         <div><label for="gUnrel">Cảnh báo kém tin cậy khi c ≥ … × R</label><input id="gUnrel" inputmode="decimal"></div>
         <div><label for="gCenter">Tâm bản đồ (vĩ độ; kinh độ)</label><input id="gCenter"></div>
@@ -974,6 +1034,7 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
         <div><label for="gBandN">Thước đo ngập: số vạch</label><input id="gBandN" inputmode="numeric"></div>
         <div><label for="gBandW">Thước đo ngập: bề rộng dải màu (cm)</label><input id="gBandW" inputmode="decimal"></div>
       </div>
+      <div class="row" style="margin-top:10px"><span class="muted">Mẫu thước đo ngập:</span><button class="btn ghost" type="button" id="gPresetK">Thước khay 12 vạch × 1 cm</button><button class="btn ghost" type="button" id="gPresetX">Thước ngoài đường 10 vạch × 5 cm</button></div>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="gSave" type="button">Lưu cài đặt</button>
         <button class="btn danger" id="gWipe" type="button">Xoá toàn bộ dữ liệu lớp</button>
@@ -998,12 +1059,15 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.4.2 (11/11/2026)";var PT={};
+var APP_VERSION="1.5.0 (12/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
-var DEF={hx:30,cls:"",edges:[0,5,10,15,20,100],target:15,unrel:1.9,center:[10.9128,106.7757],lab:[],pins:[],last:null};
+var DEF={hx:30,hk:8,mode:"x",geo:false,cls:"",edges:[0,5,10,15,20],target:15,unrel:1.9,center:[10.9128,106.7757],lab:[],pins:[],last:null};
 var S=load();
+// bản cũ lưu mốc cuối 100: nhóm cuối nay mở tới +∞
+if(S.edges&&S.edges.length>2&&S.edges[S.edges.length-1]>=100)S.edges=S.edges.slice(0,-1);
+if(!(S.hk>0))S.hk=8;if(S.mode!=="k")S.mode="x";
 function load(){try{var o=JSON.parse(localStorage.getItem(KEY)||"null");if(o)return Object.assign({},DEF,o)}catch(e){}return JSON.parse(JSON.stringify(DEF))}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -1011,15 +1075,18 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function num(v){if(v==null)return NaN;v=String(v).trim().replace(/\s/g,"").replace(",",".");if(v==="")return NaN;return Number(v)}
 function fmt(x,n){if(n==null)n=1;return (Math.round(x*Math.pow(10,n))/Math.pow(10,n)).toFixed(n).replace(".",",")}
 function fmtS(x){var s=fmt(x,2);s=s.replace(/,?0+$/,"");return s}
-function level(d){var hx=S.hx;if(d>=hx)return "Đỏ";if(d>=hx/2)return "Vàng";return "Xanh"}
-function lvClass(l){return l==="Đỏ"?"lv-Do":(l==="Vàng"?"lv-Vang":"lv-Xanh")}
-var ADV={"Xanh":"Ngập nhẹ, vẫn nên đi chậm và tránh nếu có thể.","Vàng":"Cần cẩn thận, nên chọn đường khác.","Đỏ":"Nguy hiểm, không đi vào."};
+function activeH(){return S.mode==="k"?S.hk:S.hx}
+function hName(){return S.mode==="k"?"hₖ = "+fmtS(S.hk)+" cm · mô hình khay":"hₓ = "+fmtS(S.hx)+" cm · đường thực tế"}
+function level(d,h){if(h==null)h=activeH();if(d>=h)return "Đỏ";if(d>=h/2)return "Vàng";return "Xanh"}
+function lvClass(l){return l==="Đỏ"?"lv-Do":(l==="Vàng"?"lv-Vang":(l==="Xanh"?"lv-Xanh":"lv-Na"))}
+function pill(l){return '<span class="pill '+lvClass(l)+'">'+esc(l)+'</span>'}
+var ADV={"Xanh":"Độ sâu thuộc khoảng thấp. Ngoài thực tế vẫn tránh đi vào đoạn đường đang ngập.","Vàng":"Độ sâu thuộc khoảng giữa, dễ chết máy xe. Tránh đoạn đường này.","Đỏ":"Độ sâu thuộc khoảng cao, nguy hiểm. Không đi vào."};
 function showErr(id,msg){var e=$(id);if(!e)return;e.textContent=msg||"";e.classList.toggle("on",!!msg)}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function showResult(id,d,method){
   var l=level(d),r=$(id);
   r.className="result on "+lvClass(l);
-  r.innerHTML='<div>Độ sâu nước ước lượng</div><div class="big">d ≈ '+fmt(d)+' cm</div><div><b>Mức '+l+'</b> (hₓ = '+fmtS(S.hx)+' cm): '+ADV[l]+'</div>'+
+  r.innerHTML='<div>Độ sâu nước ước lượng</div><div class="big">d ≈ '+fmt(d)+' cm</div><div><b>Mức '+l+'</b> ('+hName()+'): '+(S.mode==="k"?"Kết quả trên mô hình khay, dùng để luyện phân khoảng.":ADV[l])+'</div>'+
    '<div class="row noprint" style="margin-top:10px"><button class="btn ghost" type="button" data-tolab>Đưa vào thử nghiệm</button><button class="btn ghost" type="button" data-tomap>Ghim lên bản đồ</button></div>';
   S.last={d:Math.round(d*10)/10,method:method,level:l};save();
   r.querySelector("[data-tolab]").onclick=function(){$("lDt").value=fmt(d);$("lMethod").value=method;go("lab")};
@@ -1041,12 +1108,16 @@ function go(name){
 Array.prototype.forEach.call(document.querySelectorAll("[data-go]"),function(b){b.addEventListener("click",function(){go(b.dataset.go)})});
 
 function renderHome(){
-  var hx=S.hx;
-  $("thresholdInfo").innerHTML='<table><tr><th>Mức</th><th>Độ sâu d</th><th>Khuyến cáo</th></tr>'+
-  '<tr><td><span class="pill lv-Xanh">Xanh</span></td><td>d &lt; '+fmtS(hx/2)+' cm</td><td>'+ADV.Xanh+'</td></tr>'+
-  '<tr><td><span class="pill lv-Vang">Vàng</span></td><td>'+fmtS(hx/2)+' ≤ d &lt; '+fmtS(hx)+' cm</td><td>'+ADV["Vàng"]+'</td></tr>'+
-  '<tr><td><span class="pill lv-Do">Đỏ</span></td><td>d ≥ '+fmtS(hx)+' cm</td><td>'+ADV["Đỏ"]+'</td></tr></table>';
+  var h=activeH(),sym=S.mode==="k"?"hₖ":"hₓ";
+  Array.prototype.forEach.call(document.querySelectorAll("[data-mode]"),function(b){var on=b.dataset.mode===S.mode;b.className="btn"+(on?"":" ghost");b.setAttribute("aria-pressed",on?"true":"false")});
+  $("thresholdInfo").innerHTML='<p class="muted" style="margin:0 0 6px">Đang dùng '+sym+' = '+fmtS(h)+' cm cho kết quả A, B, C và Chụp nhanh. Bảng thử nghiệm luôn tô màu theo hₖ = '+fmtS(S.hk)+' cm; bản đồ luôn xếp mức theo hₓ = '+fmtS(S.hx)+' cm.</p>'+
+  '<table><tr><th>Mức</th><th>Độ sâu d</th><th>Ý nghĩa</th></tr>'+
+  '<tr><td>'+pill("Xanh")+'</td><td>d &lt; '+fmtS(h/2)+' cm</td><td>'+ADV.Xanh+'</td></tr>'+
+  '<tr><td>'+pill("Vàng")+'</td><td>'+fmtS(h/2)+' ≤ d &lt; '+fmtS(h)+' cm</td><td>'+ADV["Vàng"]+'</td></tr>'+
+  '<tr><td>'+pill("Đỏ")+'</td><td>d ≥ '+fmtS(h)+' cm</td><td>'+ADV["Đỏ"]+'</td></tr></table>'+
+  '<p class="muted" style="margin:6px 0 0">Màu chỉ mô tả khoảng độ sâu. Ngoài thực tế, tránh mọi đoạn đường đang ngập.</p>';
 }
+Array.prototype.forEach.call(document.querySelectorAll("[data-mode]"),function(b){b.addEventListener("click",function(){S.mode=b.dataset.mode;save();renderHome();if(typeof fillCfg==="function")fillCfg()})});
 
 // ---------- method A ----------
 function calcA(){
@@ -1404,7 +1475,7 @@ function qReport(first){
   // lưu / cập nhật điểm cảnh báo tại vị trí chụp
   if(Q.geo){
     var name=Q.place||("Điểm chụp lúc "+Q.shotAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+" "+Q.shotAt.toLocaleDateString("vi-VN"));
-    var pin={name:name,lv:lv,dep:Math.round(dep*10)/10,src:"Ảnh chụp (tự đo)",lat:Q.geo.lat,lng:Q.geo.lng,fx:null,fy:null,t:Q.shotAt.getTime()};
+    var pin={name:name,lv:level(dep,S.hx),dep:Math.round(dep*10)/10,src:"Đo bằng trạm",when:Q.shotAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+" "+Q.shotAt.toLocaleDateString("vi-VN"),note:"Ảnh chụp, app tự đọc thước",lat:Q.geo.lat,lng:Q.geo.lng,fx:null,fy:null,t:Q.shotAt.getTime()};
     if(Q.pinIdx>=0&&S.pins[Q.pinIdx]&&S.pins[Q.pinIdx].t===pin.t){pin.name=S.pins[Q.pinIdx].name;S.pins[Q.pinIdx]=pin}else{S.pins.push(pin);Q.pinIdx=S.pins.length-1}
     save();if(typeof renderPins==="function")renderPins();
     if(first&&!Q.place)qPlace();
@@ -1492,7 +1563,8 @@ function initQuick(){
   $("qFile").onchange=function(e){fromFile(e.target.files&&e.target.files[0],false);e.target.value=""};
   $("qCap").onchange=function(e){fromFile(e.target.files&&e.target.files[0],true);e.target.value=""};
   $("qPick").onclick=function(){stopCam();$("qFile").click()};
-  $("qGeo").onchange=function(){if(this.checked)qStartGeo();else{qStopGeo();$("qGeoMsg").textContent="Không gắn vị trí cho ảnh chụp."}};
+  $("qGeo").checked=!!S.geo;
+  $("qGeo").onchange=function(){S.geo=this.checked;save();if(this.checked)qStartGeo();else{qStopGeo();$("qGeoMsg").textContent="Không gắn vị trí cho ảnh chụp."}};
   $("qRedo").onclick=function(){if(Q.img){Q.det=detectGauge(Q.img);qDraw();qReport(false)}};
   $("qSave").onclick=function(){try{var a=document.createElement("a");a.href=$("qCanvas").toDataURL("image/jpeg",0.9);a.download="canh-bao-ngap-"+Date.now()+".jpg";document.body.appendChild(a);a.click();a.remove()}catch(_){}};
   $("qManual").onclick=function(){if(!Q.img)return;go("A");PT.A.load(Q.img);};
@@ -1593,59 +1665,185 @@ $("cCalc").onclick=calcC;
 // ---------- lab ----------
 function bucket(delta){
   var e=S.edges;
-  for(var i=0;i<e.length-1;i++){var last=i===e.length-2; if(delta>=e[i]&&(delta<e[i+1]||(last&&delta<=e[i+1])))return i}
+  for(var i=0;i<e.length;i++){if(delta>=e[i]&&(i===e.length-1||delta<e[i+1]))return i}
   return -1;
 }
-function edgeLabel(i){var e=S.edges,last=i===e.length-2;return "["+fmtS(e[i])+"; "+fmtS(e[i+1])+(last?"]":")")}
+function edgeLabel(i){var e=S.edges;return i===e.length-1?"["+fmtS(e[i])+"; +∞)":"["+fmtS(e[i])+"; "+fmtS(e[i+1])+")"}
+function mkRow(g,lv,m,k,note,dt,d0,smp){return {g:g,lv:lv,m:m,k:k||"Ban đầu",note:note||"",dt:dt,d0:d0,cls:S.cls,s:smp?1:0}}
+function rStat(r){var D=Math.abs(r.dt-r.d0);return {D:D,del:r.d0>0?D/r.d0*100:null}}
+function colK(d){return level(d,S.hk)}
+function f2(x){return fmt(x,2)}
 $("lAdd").onclick=function(){
-  showErr("lErr","");
-  var g=$("lGroup").value.trim(),dt=num($("lDt").value),d0=num($("lD0").value);
+  showErr("lErr","");$("lMsg").textContent="";
+  var g=$("lGroup").value.trim(),dt=num($("lDt").value),d0=num($("lD0").value),lv=$("lLevel").value;
   if(!g)return showErr("lErr","Nhập mã nhóm (không ghi họ tên).");
-  if(!(dt>=0)||!(d0>0))return showErr("lErr","dₜ phải là số không âm và d₀ phải lớn hơn 0.");
-  var D=Math.abs(dt-d0),del=D/d0*100;
-  S.lab.push({g:g,lv:$("lLevel").value,m:$("lMethod").value,dt:dt,d0:d0,D:Math.round(D*100)/100,del:Math.round(del*100)/100,cls:S.cls});
-  save();$("lDt").value="";$("lD0").value="";renderLab();
+  if(lv==="Khô"&&isNaN(d0)){d0=0;$("lD0").value="0"}
+  if(!(dt>=0)||!(d0>=0))return showErr("lErr","dₜ và d₀ phải là số không âm.");
+  if(d0===0&&lv!=="Khô")return showErr("lErr","d₀ = 0 chỉ dùng cho ảnh khô: chọn “Ảnh khô” ở ô Mực nước.");
+  S.lab.push(mkRow(g,lv,$("lMethod").value,$("lKind").value,$("lNote").value.trim(),dt,d0,0));
+  save();$("lDt").value="";$("lD0").value="";$("lNote").value="";
+  if(d0===0)$("lMsg").textContent="Đã lưu ảnh khô: dùng để kiểm tra mốc ban đầu, sai số tương đối không xác định.";
+  renderLab();
 };
+$("lFilter").onchange=function(){renderLab()};
 function renderLab(){
-  var rows=S.lab;
-  $("lCount").textContent="("+rows.length+" phép đo)";
-  var h='<tr><th>#</th><th>Nhóm</th><th>Mực</th><th>PP</th><th>dₜ</th><th>d₀</th><th>Δ (cm)</th><th>δ (%)</th><th></th></tr>';
-  rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td>'+esc(r.g)+'</td><td>'+esc(r.lv)+'</td><td>'+r.m+'</td><td>'+fmt(r.dt)+'</td><td>'+fmt(r.d0)+'</td><td>'+fmt(r.D)+'</td><td>'+fmt(r.del)+'</td><td><button class="btn danger" style="padding:3px 8px" data-del="'+i+'" type="button" aria-label="Xoá">×</button></td></tr>'});
-  if(!rows.length)h+='<tr><td colspan="9" class="muted">Chưa có phép đo nào.</td></tr>';
-  $("lTable").innerHTML=h;
-  Array.prototype.forEach.call($("lTable").querySelectorAll("[data-del]"),function(b){b.onclick=function(){S.lab.splice(+b.dataset.del,1);save();renderLab()}});
-  // frequency
-  var nb=S.edges.length-1,out="";
+  var rows=S.lab,flt=$("lFilter").value,T=S.target;
+  var base=rows.filter(function(r){return r.k!=="Cải tiến"&&r.d0>0}),imp=rows.filter(function(r){return r.k==="Cải tiến"});
+  var dry=rows.filter(function(r){return !(r.d0>0)}).length;
+  $("lCount").textContent="("+rows.length+" phép đo · "+base.length+" lượt ban đầu · "+imp.length+" lượt cải tiến"+(dry?" · "+dry+" ảnh khô":"")+")";
+  // so sánh ba phương pháp
+  var cmp='<table><tr><th>PP</th><th class="num">Số lượt</th><th class="num">Δ TB (cm)</th><th class="num">δ TB (%)</th><th class="num">δ &lt; '+fmtS(T)+'%</th><th class="num">Tỉ lệ đạt</th><th class="num">Cùng màu dₜ/d₀</th></tr>';
+  var all={n:0,D:0,d:0,ok:0,same:0};
   ["A","B","C"].forEach(function(m){
-    var sub=rows.filter(function(r){return r.m===m}),cnt=new Array(nb).fill(0),out_of=0;
-    sub.forEach(function(r){var b=bucket(r.del);if(b>=0)cnt[b]++;else out_of++});
-    var pass=sub.filter(function(r){return r.del<S.target}).length;
+    var sub=base.filter(function(r){return r.m===m}),n=sub.length,sD=0,sd=0,ok=0,same=0;
+    sub.forEach(function(r){var t=rStat(r);sD+=t.D;sd+=t.del;if(t.del<T)ok++;if(colK(r.dt)===colK(r.d0))same++});
+    all.n+=n;all.D+=sD;all.d+=sd;all.ok+=ok;all.same+=same;
+    cmp+='<tr><td><b>'+m+'</b></td><td class="num">'+n+'</td><td class="num">'+(n?f2(sD/n):"–")+'</td><td class="num">'+(n?f2(sd/n):"–")+'</td><td class="num">'+ok+'/'+n+'</td><td class="num">'+(n?fmt(ok/n*100)+'%':"–")+'</td><td class="num">'+same+'/'+n+'</td></tr>';
+  });
+  cmp+='<tr><td><b>Cả ba</b></td><td class="num">'+all.n+'</td><td class="num">'+(all.n?f2(all.D/all.n):"–")+'</td><td class="num">'+(all.n?f2(all.d/all.n):"–")+'</td><td class="num">'+all.ok+'/'+all.n+'</td><td class="num">'+(all.n?fmt(all.ok/all.n*100)+'%':"–")+'</td><td class="num">'+all.same+'/'+all.n+'</td></tr></table>';
+  $("lCmp").innerHTML=cmp;
+  $("lCmpNote").textContent="Chỉ tính lượt ban đầu có d₀ > 0. Hai chỉ tiêu trả lời hai câu hỏi khác nhau: sai số bao nhiêu (δ < "+fmtS(T)+"%) và có cùng khoảng màu theo hₖ = "+fmtS(S.hk)+" cm hay không.";
+  // tần số ghép nhóm
+  var nb=S.edges.length,out="";
+  ["A","B","C"].forEach(function(m){
+    var sub=base.filter(function(r){return r.m===m}),cnt=new Array(nb).fill(0),outOf=0;
+    sub.forEach(function(r){var b=bucket(rStat(r).del);if(b>=0)cnt[b]++;else outOf++});
+    var pass=sub.filter(function(r){return rStat(r).del<T}).length;
     out+='<h3>Phương pháp '+m+' – '+sub.length+' phép đo</h3><table><tr><th>δ (%)</th>';
-    for(var i=0;i<nb;i++)out+='<th>'+edgeLabel(i)+'</th>';
-    out+='</tr><tr><td>Tần số</td>'+cnt.map(function(c){return '<td>'+c+'</td>'}).join("")+'</tr>';
-    out+='<tr><td>Tần số tương đối</td>'+cnt.map(function(c){return '<td>'+(sub.length?fmt(c/sub.length*100)+'%':'–')+'</td>'}).join("")+'</tr></table>';
-    out+='<p class="muted">Tỉ lệ đạt tiêu chí δ dưới '+fmtS(S.target)+'%: <b>'+(sub.length?fmt(pass/sub.length*100)+'%':'–')+'</b> ('+pass+'/'+sub.length+')'+(out_of?' · '+out_of+' phép đo nằm ngoài các nhóm':'')+'</p>';
+    for(var i=0;i<nb;i++)out+='<th class="num">'+edgeLabel(i)+'</th>';
+    out+='<th class="num">Tổng</th></tr><tr><td>Tần số n</td>'+cnt.map(function(c){return '<td class="num">'+c+'</td>'}).join("")+'<td class="num">'+sub.length+'</td></tr>';
+    out+='<tr><td>Tần số tương đối f</td>'+cnt.map(function(c){return '<td class="num">'+(sub.length?fmt(c/sub.length*100)+'%':'–')+'</td>'}).join("")+'<td class="num">'+(sub.length?'100%':'–')+'</td></tr></table>';
+    out+='<p class="muted">Tỉ lệ đạt tiêu chí δ dưới '+fmtS(T)+'%: <b>'+(sub.length?fmt(pass/sub.length*100)+'%':'–')+'</b> ('+pass+'/'+sub.length+')'+(outOf?' · '+outOf+' phép đo nằm ngoài các nhóm':'')+'. Phân nhóm theo δ chưa làm tròn.</p>';
   });
   $("lFreq").innerHTML=out;
+  // lượt cải tiến
+  if(!imp.length)$("lImpv").innerHTML='<p class="muted">Chưa có lượt cải tiến. Khi đo lại sau khi chỉnh một lỗi, chọn Loại lượt “Cải tiến” và ghi điều chỉnh.</p>';
+  else{
+    var h='<table><tr><th>Nhóm</th><th>Mực</th><th>PP</th><th>Điều chỉnh, dữ kiện</th><th class="num">dₜ trước</th><th class="num">dₜ sau</th><th class="num">d₀</th><th class="num">δ trước</th><th class="num">δ sau</th></tr>',sb=0,sa=0,np=0;
+    imp.forEach(function(r){
+      var o=null;for(var i=0;i<rows.length;i++){var x=rows[i];if(x.k!=="Cải tiến"&&x.g===r.g&&x.lv===r.lv&&x.m===r.m&&x.d0>0){o=x;break}}
+      var a=rStat(r),b=o?rStat(o):null;if(b&&a.del!=null){sb+=b.del;sa+=a.del;np++}
+      h+='<tr><td>'+esc(r.g)+'</td><td>'+esc(r.lv)+'</td><td>'+r.m+'</td><td>'+esc(r.note||"")+'</td><td class="num">'+(o?f2(o.dt):'–')+'</td><td class="num">'+f2(r.dt)+'</td><td class="num">'+f2(r.d0)+'</td><td class="num">'+(b?f2(b.del)+'%':'–')+'</td><td class="num">'+(a.del!=null?f2(a.del)+'%':'–')+'</td></tr>';
+    });
+    h+='</table>'+(np?'<p class="muted">δ trung bình của '+np+' cặp trước, sau: <b>'+f2(sb/np)+'% → '+f2(sa/np)+'%</b>. Giữ các điều kiện khác ổn định để thấy tác dụng của từng điều chỉnh.</p>':'');
+    $("lImpv").innerHTML=h;
+  }
+  // bảng tổng hợp
+  var th='<tr><th>#</th><th>Nhóm</th><th>Mực</th><th>PP</th><th>Lượt</th><th>Dữ kiện</th><th class="num">dₜ</th><th class="num">d₀</th><th class="num">Δ (cm)</th><th class="num">δ (%)</th><th>Màu dₜ / d₀</th><th></th></tr>',tb="",shown=0;
+  rows.forEach(function(r,i){
+    if(flt==="ci"&&r.k!=="Cải tiến")return;if(flt&&flt!=="ci"&&r.m!==flt)return;shown++;
+    var t=rStat(r);
+    tb+='<tr><td>'+(i+1)+'</td><td>'+esc(r.g)+(r.s?' <span class="tag">mẫu</span>':'')+'</td><td>'+esc(r.lv)+'</td><td>'+r.m+'</td><td>'+(r.k==="Cải tiến"?'<span class="tag">cải tiến</span>':'ban đầu')+'</td><td>'+esc(r.note||"")+'</td><td class="num">'+f2(r.dt)+'</td><td class="num">'+f2(r.d0)+'</td><td class="num">'+f2(t.D)+'</td><td class="num">'+(t.del!=null?f2(t.del):'–')+'</td><td>'+pill(colK(r.dt))+' '+pill(colK(r.d0))+'</td><td><button class="btn danger" style="padding:3px 8px" data-del="'+i+'" type="button" aria-label="Xoá">×</button></td></tr>';
+  });
+  if(!shown)tb='<tr><td colspan="12" class="muted">Chưa có phép đo nào.</td></tr>';
+  $("lTable").innerHTML=th+tb;
+  Array.prototype.forEach.call($("lTable").querySelectorAll("[data-del]"),function(b){b.onclick=function(){S.lab.splice(+b.dataset.del,1);save();renderLab()}});
 }
 function csv(rows){return "﻿"+rows.map(function(r){return r.map(function(v){v=String(v==null?"":v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(",")}).join("\r\n")}
 function download(name,text){var b=new Blob([text],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function r4(x){return x==null||isNaN(x)?"":String(Math.round(x*10000)/10000)}
 $("lCsv").onclick=function(){
-  var r=[["Lop","Nhom","Muc nuoc","Phuong phap","d_t (cm)","d_0 (cm)","Delta (cm)","delta (%)"]];
-  S.lab.forEach(function(x){r.push([x.cls||S.cls,x.g,x.lv,x.m,x.dt,x.d0,x.D,x.del])});
+  var r=[["Lop","Nhom","Muc nuoc","Phuong phap","Loai luot","Du kien / dieu chinh","d_t (cm)","d_0 (cm)","Delta (cm)","delta (%)","Mau d_t (h_k)","Mau d_0 (h_k)"]];
+  S.lab.forEach(function(x){var t=rStat(x);r.push([x.cls||S.cls,x.g,x.lv,x.m,x.k||"Ban đầu",x.note||"",r4(x.dt),r4(x.d0),r4(t.D),t.del==null?"":r4(t.del),colK(x.dt),colK(x.d0)])});
   download("thu-nghiem-"+(S.cls||"lop")+".csv",csv(r));
 };
+// đọc CSV (dấu phẩy hoặc chấm phẩy, có ngoặc kép)
+function parseCSV(t){
+  t=String(t).replace(/^﻿/,"");var first=t.split(/\r?\n/)[0]||"",sep=first.split(";").length>first.split(",").length?";":",";
+  var rows=[],row=[],f="",q=false;
+  for(var i=0;i<t.length;i++){var c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===sep){row.push(f);f=""}else if(c==="\n"){row.push(f);rows.push(row);row=[];f=""}else if(c!=="\r")f+=c}
+  if(f!==""||row.length){row.push(f);rows.push(row)}
+  return rows.filter(function(r){return r.some(function(x){return String(x).trim()!==""})});
+}
+function nk(s){return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/g,"d").replace(/[^a-z0-9_]/g,"")}
+function readFiles(files,cb){var list=Array.prototype.slice.call(files||[]),texts=[],left=list.length;if(!left)return;
+  list.forEach(function(f,i){var rd=new FileReader();rd.onload=function(){texts[i]=rd.result;if(--left===0)cb(texts,list.length)};rd.onerror=function(){texts[i]="";if(--left===0)cb(texts,list.length)};rd.readAsText(f,"utf-8")})}
+function labKey(r){return [r.cls||"",r.g,r.lv,r.m,r.k||"Ban đầu",Math.round(r.dt*1e4),Math.round(r.d0*1e4)].join("|")}
+function importLab(texts,nf){
+  var have={},add=0,dup=0,bad=0;S.lab.forEach(function(r){have[labKey(r)]=1});
+  texts.forEach(function(t){
+    var rows=parseCSV(t);if(rows.length<2)return;var H=rows[0].map(nk),ix=function(p){for(var i=0;i<H.length;i++)if(p(H[i]))return i;return -1};
+    var iL=ix(function(h){return h==="lop"}),iG=ix(function(h){return h.indexOf("nhom")===0}),iM=ix(function(h){return h.indexOf("muc")===0}),iP=ix(function(h){return h.indexOf("phuong")===0}),
+        iK=ix(function(h){return h.indexOf("loai")===0}),iN=ix(function(h){return h.indexOf("dukien")>=0||h.indexOf("ghichu")>=0||h.indexOf("dieuchinh")>=0}),
+        iT=ix(function(h){return h.indexOf("d_t")===0||h==="dt"}),i0=ix(function(h){return h.indexOf("d_0")===0||h==="d0"});
+    if(iG<0||iP<0||iT<0||i0<0){bad+=rows.length-1;return}
+    rows.slice(1).forEach(function(c){
+      var dt=num(c[iT]),d0=num(c[i0]),m=String(c[iP]||"").trim().charAt(0).toUpperCase();
+      if(!(dt>=0)||!(d0>=0)||"ABC".indexOf(m)<0||!String(c[iG]).trim()){bad++;return}
+      var lv=iM>=0?String(c[iM]).trim():"";if(d0===0)lv="Khô";
+      var k=iK>=0&&nk(c[iK]).indexOf("caitien")===0?"Cải tiến":"Ban đầu";
+      var r=mkRow(String(c[iG]).trim(),lv||"Mực 1",m,k,iN>=0?String(c[iN]).trim():"",dt,d0,0);if(iL>=0&&String(c[iL]).trim())r.cls=String(c[iL]).trim();
+      var key=labKey(r);if(have[key]){dup++;return}have[key]=1;S.lab.push(r);add++;
+    });
+  });
+  save();renderLab();$("lMsg").textContent="Đã nhập "+add+" phép đo từ "+nf+" tệp"+(dup?", bỏ qua "+dup+" dòng trùng":"")+(bad?", "+bad+" dòng không đọc được":"")+".";
+}
+$("lImp").onclick=function(){$("lFile").value="";$("lFile").click()};
+$("lFile").onchange=function(){readFiles(this.files,importLab)};
+// bộ dữ liệu mẫu 54 lượt và 6 lượt cải tiến (Phụ lục 6 của hồ sơ)
+var SMP={A:{N1:[428,372,296],N2:[432,366,304],N3:[424,376,288],N4:[436,364,292],N5:[426,378,312],N6:[418,362,284]},
+ B:{N1:[12.45,13.63,12.24],N2:[11.76,13.47,13.08],N3:[12.92,13.42,11.63],N4:[11.63,13.86,13.29],N5:[12.55,13.67,11.88],N6:[11.49,13.29,11.2]},
+ C:{N1:[3.51,7.24,11.17],N2:[4.15,6.49,9.9],N3:[3.19,7.66,11.81],N4:[3.94,6.39,11.49],N5:[3.09,8.09,9.68],N6:[4.58,6.17,12.45]},
+ IMP:[["N1",13.95,"Bổ sung ánh sáng cho hai đầu dây cung"],["N2",13.96,"Cố định điện thoại trên giá"],["N3",13.96,"Đặt lại thẻ tỉ lệ cùng mặt phẳng"],["N4",13.95,"Chờ mặt nước phẳng trước khi chụp"],["N5",13.97,"Chỉnh mặt máy song song với đĩa"],["N6",13.95,"Phóng lớn ảnh khi chọn hai đầu dây"]]};
+function sampleRows(){
+  var out=[],D0=[3.5,6.5,10],cs=Math.cos(20*Math.PI/180);
+  ["A","B","C"].forEach(function(m){["N1","N2","N3","N4","N5","N6"].forEach(function(g){SMP[m][g].forEach(function(x,i){
+    var dt,note;
+    if(m==="A"){dt=25-0.05*x;note="p′ = "+fmtS(x)+" px"}
+    else if(m==="B"){dt=7+(i===2?1:-1)*Math.sqrt(49-x*x/4);note="c = "+fmtS(x)+" cm"}
+    else{dt=x*cs;note="L = "+fmtS(x)+" cm"}
+    out.push(mkRow(g,"Mực "+(i+1),m,"Ban đầu",note,dt,D0[i],1));
+  })})});
+  SMP.IMP.forEach(function(r){out.push(mkRow(r[0],"Mực 2","B","Cải tiến","c = "+fmtS(r[1])+" cm · "+r[2],7-Math.sqrt(49-r[1]*r[1]/4),6.5,1))});
+  return out;
+}
+$("lSample").onclick=function(){
+  var had=S.lab.some(function(r){return r.s});
+  S.lab=S.lab.filter(function(r){return !r.s}).concat(sampleRows());save();renderLab();
+  $("lMsg").textContent=(had?"Đã nạp lại":"Đã nạp")+" bộ số liệu mô phỏng: 54 lượt ban đầu và 6 lượt cải tiến (H = 25 cm, R = 7 cm, α = 20°, thẻ 10 cm = 200 px). Các dòng có nhãn “mẫu”; bấm “Xoá dữ liệu mẫu” trước khi nhập số đo thật.";
+};
+$("lClearSample").onclick=function(){var n=S.lab.length;S.lab=S.lab.filter(function(r){return !r.s});save();renderLab();$("lMsg").textContent="Đã xoá "+(n-S.lab.length)+" dòng dữ liệu mẫu."};
 
 // ---------- map ----------
-var map=null,layer=null,mapReady=false,COL={"Xanh":"#1f8a4c","Vàng":"#e0a100","Đỏ":"#c0392b"};
-function pinLevel(){var v=$("mLevel").value;if(v!=="auto")return v;var dep=num($("mDepth").value);if(dep>=0&&!isNaN(dep))return level(dep);return S.last?S.last.level:null}
+var map=null,layer=null,mapReady=false,COL={"Xanh":"#1f8a4c","Vàng":"#e0a100","Đỏ":"#c0392b","Chưa đủ dữ kiện":"#7f8c8d"},parInf=false;
+// xếp mức một độ sâu hoặc một khoảng độ sâu theo hₓ; khoảng cắt qua ranh giới màu thì "Chưa đủ dữ kiện"
+function classify(dep,dep2,inf){
+  if(dep==null||isNaN(dep))return null;
+  var a=level(dep,S.hx);if(inf)return a==="Đỏ"?"Đỏ":"Chưa đủ dữ kiện";
+  if(dep2==null||isNaN(dep2))return a;
+  var A=level(Math.min(dep,dep2),S.hx),B=level(Math.max(dep,dep2),S.hx);return A===B?A:"Chưa đủ dữ kiện";
+}
+function pinLevel(){
+  var v=$("mLevel").value;if(v!=="auto")return v;
+  var r=classify(num($("mDepth").value),num($("mDepth2").value),parInf);if(r)return r;
+  return S.last?level(S.last.d,S.hx):null;
+}
+function parFill(){
+  var p=$("mPar").value,D=num($("mD").value),msg="";parInf=false;
+  if(!p){$("mParMsg").textContent="Nếu khoảng ước lượng cắt qua ranh giới màu, app ghi “Chưa đủ dữ kiện”.";return}
+  $("mSrc").value="Mô tả của phụ huynh";
+  if(p==="a"){$("mDepth").value="";$("mDepth2").value="";$("mLevel").value="Chưa đủ dữ kiện";msg="Chỉ biết “ướt lốp”: chưa đủ dữ kiện. Cần biết bề dày lốp hoặc có ảnh chuẩn."}
+  else if(!(D>0)){msg="Nhập đường kính bánh xe D để quy đổi."}
+  else{
+    $("mLevel").value="auto";$("mDepth2").value="";
+    if(p==="b"){$("mDepth").value=fmtS(D/4);msg="d ≈ D/4 = "+fmtS(D/4)+" cm (tỉ lệ theo đường kính)."}
+    if(p==="c"){$("mDepth").value=fmtS(D/2);msg="d ≈ D/2 = R = "+fmtS(D/2)+" cm (dây cung bằng đường kính)."}
+    if(p==="d"){$("mDepth").value=fmtS(D/2);parInf=true;msg="d > D/2 = "+fmtS(D/2)+" cm (mặt nước cao hơn tâm). "+(D/2>=S.hx?"Đã từ hₓ trở lên: mức Đỏ.":"Chưa biết cao bao nhiêu: app ghi “Chưa đủ dữ kiện”.")}
+  }
+  $("mParMsg").textContent=msg+" Nếu phụ huynh ghi được số đo bằng centimét thì dùng trực tiếp số đo đó.";
+}
+$("mPar").onchange=parFill;$("mD").addEventListener("input",parFill);
+["mDepth","mDepth2"].forEach(function(id){$(id).addEventListener("input",function(){if(parInf||$("mPar").value){parInf=false;$("mPar").value="";$("mParMsg").textContent="Đang dùng số đo nhập tay."}})});
 function addPin(lat,lng,fx,fy){
   var lv=pinLevel();
-  if(!lv){$("mHint").textContent="Chưa có kết quả đo: chọn mức Xanh, Vàng hoặc Đỏ ở ô Mức, hoặc nhập độ sâu, rồi chạm lại lên bản đồ.";$("mLevel").focus();return}
-  var name=$("mName").value.trim()||"Điểm ngập";
-  var dep=num($("mDepth").value);
-  S.pins.push({name:name,lv:lv,dep:isNaN(dep)?null:dep,src:$("mSrc").value,lat:lat,lng:lng,fx:fx,fy:fy});
-  save();renderPins();$("mHint").textContent="Đã ghim: "+name+" (mức "+lv+").";
+  if(!lv){$("mHint").textContent="Chưa có kết quả đo: nhập độ sâu, hoặc chọn mức Xanh, Vàng, Đỏ, Chưa đủ dữ kiện ở ô Mức, rồi chạm lại lên bản đồ.";$("mLevel").focus();return}
+  var name=$("mName").value.trim()||"Điểm ngập",dep=num($("mDepth").value),dep2=num($("mDepth2").value);
+  var p={code:$("mCode").value.trim(),name:name,lv:lv,dep:isNaN(dep)?null:dep,dep2:isNaN(dep2)?null:dep2,src:$("mSrc").value,when:$("mWhen").value.trim(),note:$("mNote").value.trim(),lat:lat,lng:lng,fx:fx,fy:fy};
+  if(parInf)p.inf=1;
+  S.pins.push(p);save();renderPins();$("mHint").textContent="Đã ghim: "+(p.code?p.code+" · ":"")+name+" (mức "+lv+").";
+  $("mCode").value="";
 }
 function initMap(){
   if(mapReady){if(map)setTimeout(function(){map.invalidateSize()},50);return}
@@ -1691,34 +1889,103 @@ function mapStatus(){
   if(offlineOn||!mapBases.length)return;
   $("mapNote").textContent="Nền: "+mapBases[bi][0]+" · đã tải "+okTiles+" ô"+(badTiles?" · "+badTiles+" ô lỗi":"")+". Chọn nền khác ở góc phải bản đồ nếu cần.";
 }
+function gridClick(e){var r=this.getBoundingClientRect();addPin(null,null,(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height)}
+function bindGrid(){if(!fbBound){fbBound=true;$("mapFallback").addEventListener("click",gridClick)}}
+var gridOn=false;
+function showGrid(on){
+  gridOn=on;bindGrid();
+  if(on||offlineOn){$("map").style.display="none";$("mapFallback").style.display="block"}
+  else{$("map").style.display="";$("mapFallback").style.display="none";if(map)setTimeout(function(){map.invalidateSize()},50)}
+  $("mGrid").textContent=(on&&!offlineOn)?"Bản đồ số":"Sơ đồ lưới";
+  renderPins();
+}
 function offline(){
   if(offlineOn)return;offlineOn=true;
   $("map").style.display="none";$("mapFallback").style.display="block";
   $("mapNote").textContent="Không tải được bản đồ trực tuyến (kiểm tra mạng), đang dùng sơ đồ lưới ngoại tuyến. Khi có mạng, bấm “Tải lại bản đồ”.";
-  if(!fbBound){fbBound=true;$("mapFallback").addEventListener("click",function(e){var r=this.getBoundingClientRect();addPin(null,null,(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height)})}
-  renderPins();
+  bindGrid();renderPins();
 }
 function retryMap(){
   if(!window.L)return;
   if(!map){mapReady=false;offlineOn=false;$("map").style.display="";$("mapFallback").style.display="none";initMap();return}
-  offlineOn=false;$("map").style.display="";$("mapFallback").style.display="none";
+  offlineOn=false;gridOn=false;$("mGrid").textContent="Sơ đồ lưới";$("map").style.display="";$("mapFallback").style.display="none";
   mapBases.forEach(function(b){if(map.hasLayer(b[1]))map.removeLayer(b[1])});
   bi=0;okTiles=0;badTiles=0;mapBases[0][1].addTo(map);
   setTimeout(function(){map.invalidateSize();mapBases[0][1].redraw()},100);mapStatus();renderPins();
 }
+function depText(p){
+  if(p.dep==null)return "–";if(p.inf)return "trên "+fmtS(p.dep)+" cm";
+  if(p.dep2!=null&&p.dep2!==p.dep)return fmtS(Math.min(p.dep,p.dep2))+"–"+fmtS(Math.max(p.dep,p.dep2))+" cm";
+  return fmtS(p.dep)+" cm";
+}
+// sơ đồ tình huống mẫu tại T₀ (Phiếu số 4, Phụ lục 6): tên đường A–H là mã giả định
+var SMAP=[
+ {code:"P01",name:"Đường A",dep:8,dep2:10,src:"Ảnh có thước chuẩn",note:"Khoảng hoàn toàn dưới 15 cm",fx:.55,fy:.14},
+ {code:"P02",name:"Đường B",dep:17,dep2:20,src:"Ảnh có thước chuẩn",note:"Khoảng nằm giữa 15 và 30 cm",fx:.55,fy:.82},
+ {code:"P03",name:"Đường C",dep:29,dep2:33,src:"Khảo sát phụ huynh",note:"Hai phép ước lượng khác nhau; khoảng cắt qua mốc 30 cm",fx:.86,fy:.48},
+ {code:"P04",name:"Đường D",dep:35,dep2:39,src:"Ảnh có thước chuẩn",note:"Khoảng hoàn toàn từ 30 cm trở lên",fx:.86,fy:.82},
+ {code:"P05",name:"Đường E",dep:11,dep2:13,src:"Ảnh có thước chuẩn",note:"Khoảng hoàn toàn dưới 15 cm",fx:.3,fy:.82},
+ {code:"P06",name:"Đường F",dep:null,lv:"Chưa đủ dữ kiện",src:"Mô tả của phụ huynh",note:"Chỉ mô tả “ướt lốp”, thiếu kích thước chuẩn",fx:.86,fy:.14},
+ {code:"P07",name:"Đường G",dep:0,src:"Xác nhận khô",note:"Kịch bản xác nhận khô ở T₀",fx:.08,fy:.5},
+ {code:"P08",name:"Đường H",dep:0,src:"Xác nhận khô",note:"Kịch bản xác nhận khô ở T₀",fx:.08,fy:.14}];
+var SNODE={home:[.08,.9],school:[.3,.14]};
+function gridSvg(){
+  var P={};S.pins.forEach(function(p){if(p.s&&p.fx!=null)P[p.code]=[p.fx*100,p.fy*100]});
+  var pt=function(k){return k==="Nhà"?[SNODE.home[0]*100,SNODE.home[1]*100]:(k==="Trường"?[SNODE.school[0]*100,SNODE.school[1]*100]:P[k])};
+  var line=function(a,style){var pts=a.map(pt).filter(Boolean).map(function(q){return q[0]+","+q[1]}).join(" ");return '<polyline points="'+pts+'" fill="none" '+style+' vector-effect="non-scaling-stroke"/>'};
+  return '<svg class="gridsvg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+
+    line(["Trường","P01","P06","P03","P04","P02","P05","Nhà"],'stroke="#9aa9b5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".55"')+
+    line(["Nhà","P07","P08","Trường"],'stroke="#0a6aa1" stroke-width="3" stroke-dasharray="7 5"')+'</svg>'+
+    '<div class="gl" style="left:'+SNODE.home[0]*100+'%;top:'+SNODE.home[1]*100+'%">Nhà</div><div class="gl" style="left:'+SNODE.school[0]*100+'%;top:'+SNODE.school[1]*100+'%">Trường</div>'+
+    '<div class="gl" style="left:47%;top:48%;font-weight:500;text-align:center">Tuyến vòng mẫu: Nhà → P07 → P08 → Trường<br>(G, H xác nhận khô tại T₀)</div>';
+}
 function renderPins(){
   if(layer)layer.clearLayers();
-  var fb=$("mapFallback");Array.prototype.forEach.call(fb.querySelectorAll(".pin"),function(p){p.remove()});
+  var fb=$("mapFallback");fb.innerHTML="";
+  if(S.pins.some(function(p){return p.s&&p.fx!=null}))fb.insertAdjacentHTML("beforeend",gridSvg());
   S.pins.forEach(function(p){
-    if(layer&&p.lat!=null){L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:2,fillColor:COL[p.lv],fillOpacity:.95}).bindPopup("<b>"+esc(p.name)+"</b><br>Mức "+p.lv+(p.dep!=null?" · "+fmt(p.dep)+" cm":"")+"<br>"+esc(p.src)).addTo(layer)}
-    if(p.fx!=null){var d=document.createElement("div");d.className="pin";d.style.left=(p.fx*100)+"%";d.style.top=(p.fy*100)+"%";d.style.background=COL[p.lv];d.title=p.name;fb.appendChild(d)}
+    var col=COL[p.lv]||"#7f8c8d",title=(p.code?p.code+" · ":"")+p.name;
+    if(layer&&p.lat!=null){L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:2,fillColor:col,fillOpacity:.95}).bindPopup("<b>"+esc(title)+"</b><br>Mức "+esc(p.lv)+" · "+depText(p)+(p.when?"<br>Thời điểm: "+esc(p.when):"")+"<br>Nguồn: "+esc(p.src||"")+(p.note?"<br>"+esc(p.note):"")).addTo(layer)}
+    if(p.fx!=null){var d=document.createElement("div");d.className="pin";d.style.left=(p.fx*100)+"%";d.style.top=(p.fy*100)+"%";d.style.background=col;d.title=title+" – "+p.lv;if(p.code){var sp=document.createElement("span");sp.textContent=p.code;d.appendChild(sp)}fb.appendChild(d)}
   });
-  var h='<tr><th>#</th><th>Đường / đoạn đường</th><th>Mức</th><th>Độ sâu</th><th>Nguồn</th><th></th></tr>';
-  S.pins.forEach(function(p,i){h+='<tr><td>'+(i+1)+'</td><td>'+esc(p.name)+'</td><td><span class="pill '+lvClass(p.lv)+'">'+p.lv+'</span></td><td>'+(p.dep!=null?fmt(p.dep)+' cm':'–')+'</td><td>'+esc(p.src)+'</td><td><button class="btn danger" style="padding:3px 8px" data-pdel="'+i+'" type="button" aria-label="Xoá">×</button></td></tr>'});
-  if(!S.pins.length)h+='<tr><td colspan="6" class="muted">Chưa có điểm nào.</td></tr>';
+  var h='<tr><th>#</th><th>Mã</th><th>Đường / đoạn đường</th><th>Mức</th><th>Độ sâu</th><th>Thời điểm</th><th>Nguồn</th><th>Ghi chú</th><th></th></tr>';
+  S.pins.forEach(function(p,i){h+='<tr><td>'+(i+1)+'</td><td>'+esc(p.code||"")+'</td><td>'+esc(p.name)+(p.s?' <span class="tag">mẫu</span>':'')+'</td><td>'+pill(p.lv)+'</td><td>'+depText(p)+'</td><td>'+esc(p.when||"")+'</td><td>'+esc(p.src||"")+'</td><td>'+esc(p.note||"")+'</td><td><button class="btn danger" style="padding:3px 8px" data-pdel="'+i+'" type="button" aria-label="Xoá">×</button></td></tr>'});
+  if(!S.pins.length)h+='<tr><td colspan="9" class="muted">Chưa có điểm nào.</td></tr>';
   $("mTable").innerHTML=h;
   Array.prototype.forEach.call($("mTable").querySelectorAll("[data-pdel]"),function(b){b.onclick=function(){S.pins.splice(+b.dataset.pdel,1);save();renderPins()}});
+  var hx=S.hx;$("mHx").textContent=fmtS(hx);
+  $("mLegend").innerHTML=pill("Xanh")+' d &lt; '+fmtS(hx/2)+' cm '+pill("Vàng")+' '+fmtS(hx/2)+' ≤ d &lt; '+fmtS(hx)+' cm '+pill("Đỏ")+' d ≥ '+fmtS(hx)+' cm '+pill("Chưa đủ dữ kiện")+' thiếu vật chuẩn hoặc khoảng cắt qua ranh giới';
 }
+$("mGrid").onclick=function(){if(offlineOn)return;showGrid(!gridOn)};
+$("mSample").onclick=function(){
+  S.pins=S.pins.filter(function(p){return !p.s});
+  SMAP.forEach(function(q){var p=Object.assign({},q,{when:"T₀",lat:null,lng:null,s:1});p.lv=q.lv||classify(q.dep,q.dep2,false);if(p.dep2==null)delete p.dep2;S.pins.push(p)});
+  save();showGrid(true);
+  $("mHint").textContent="Đã nạp sơ đồ tình huống mẫu tại T₀, xếp mức theo hₓ = "+fmtS(S.hx)+" cm (hồ sơ dùng hₓ = 30 cm). Tên đường A–H là mã giả định. Ngoài thực tế, chờ thông báo của nhà trường và người lớn trước khi chọn tuyến.";
+};
+function pinKey(p){return [p.code||"",p.name,p.lat==null?"":(+p.lat).toFixed(5),p.lng==null?"":(+p.lng).toFixed(5),p.fx==null?"":(+p.fx).toFixed(3),p.fy==null?"":(+p.fy).toFixed(3),p.when||""].join("|")}
+function importPins(texts,nf){
+  var have={},add=0,dup=0,bad=0;S.pins.forEach(function(p){have[pinKey(p)]=1});
+  texts.forEach(function(t){
+    var rows=parseCSV(t);if(rows.length<2)return;var H=rows[0].map(nk),ix=function(f){for(var i=0;i<H.length;i++)if(f(H[i]))return i;return -1};
+    var iC=ix(function(h){return h.indexOf("ma")===0}),iN=ix(function(h){return h.indexOf("duong")===0}),iV=ix(function(h){return h.indexOf("muc")===0}),
+        iD=ix(function(h){return h==="dosaucm"||h.indexOf("dosautu")===0}),iE=ix(function(h){return h.indexOf("dosauden")===0}),
+        iW=ix(function(h){return h.indexOf("thoidiem")===0}),iS=ix(function(h){return h.indexOf("nguon")===0}),iG=ix(function(h){return h.indexOf("ghichu")===0}),
+        iLa=ix(function(h){return h.indexOf("vido")===0}),iLo=ix(function(h){return h.indexOf("kinhdo")===0}),iX=ix(function(h){return h.indexOf("xsodo")===0}),iY=ix(function(h){return h.indexOf("ysodo")===0});
+    if(iN<0){bad+=rows.length-1;return}
+    rows.slice(1).forEach(function(c){
+      var g=function(i){return i>=0&&c[i]!=null?String(c[i]).trim():""};
+      var dep=num(g(iD)),dep2=num(g(iE)),lat=num(g(iLa)),lng=num(g(iLo)),fx=num(g(iX)),fy=num(g(iY)),lv=g(iV);
+      if(["Xanh","Vàng","Đỏ","Chưa đủ dữ kiện"].indexOf(lv)<0)lv=classify(isNaN(dep)?null:dep,isNaN(dep2)?null:dep2,false);
+      if(!lv||(isNaN(lat)&&isNaN(fx))){bad++;return}
+      var p={code:g(iC),name:g(iN)||"Điểm ngập",lv:lv,dep:isNaN(dep)?null:dep,dep2:isNaN(dep2)?null:dep2,src:g(iS),when:g(iW),note:g(iG),lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,fx:isNaN(fx)?null:fx,fy:isNaN(fy)?null:fy};
+      var k=pinKey(p);if(have[k]){dup++;return}have[k]=1;S.pins.push(p);add++;
+    });
+  });
+  save();renderPins();$("mHint").textContent="Đã nhập "+add+" điểm từ "+nf+" tệp"+(dup?", bỏ qua "+dup+" điểm trùng":"")+(bad?", "+bad+" dòng không đọc được":"")+".";
+}
+$("mImp").onclick=function(){$("mFile").value="";$("mFile").click()};
+$("mFile").onchange=function(){readFiles(this.files,importPins)};
 // tìm địa điểm (Nominatim, dự phòng Photon) – chỉ di chuyển bản đồ, không tự ghim
 var findMarker=null;
 function fly(lat,lng,label){
@@ -1753,25 +2020,29 @@ $("mFindBtn").onclick=function(){
   });
 };
 $("mFind").addEventListener("keydown",function(e){if(e.key==="Enter")$("mFindBtn").click()});
-$("mCsv").onclick=function(){var r=[["Duong/doan duong","Muc","Do sau (cm)","Nguon","Vi do","Kinh do"]];S.pins.forEach(function(p){r.push([p.name,p.lv,p.dep==null?"":p.dep,p.src,p.lat==null?"":p.lat.toFixed(5),p.lng==null?"":p.lng.toFixed(5)])});download("diem-ngap-"+(S.cls||"lop")+".csv",csv(r))};
+$("mCsv").onclick=function(){var r=[["Ma diem","Duong/doan duong","Muc","Do sau tu (cm)","Do sau den (cm)","Thoi diem","Nguon","Ghi chu","Vi do","Kinh do","X so do","Y so do"]];S.pins.forEach(function(p){r.push([p.code||"",p.name,p.lv,p.dep==null?"":p.dep,p.inf?"":(p.dep2==null?"":p.dep2),p.when||"",p.src||"",(p.inf?"trên mức này; ":"")+(p.note||""),p.lat==null?"":(+p.lat).toFixed(5),p.lng==null?"":(+p.lng).toFixed(5),p.fx==null?"":(+p.fx).toFixed(4),p.fy==null?"":(+p.fy).toFixed(4)])});download("diem-ngap-"+(S.cls||"lop")+".csv",csv(r))};
 $("mPrint").onclick=function(){window.print()};
 $("mRetry").onclick=retryMap;
 
 // ---------- settings ----------
-function fillCfg(){$("gHx").value=fmtS(S.hx);$("gClass").value=S.cls;$("gEdges").value=S.edges.map(fmtS).join("; ");$("gTarget").value=fmtS(S.target);$("gUnrel").value=fmtS(S.unrel);$("gCenter").value=S.center.join("; ");var G=gaugeCfg();$("gBand").value=fmtS(G.band);$("gBandN").value=G.n;$("gBandW").value=fmtS(G.w)}
+function fillCfg(){$("gHk").value=fmtS(S.hk);$("gMode").value=S.mode;$("gHx").value=fmtS(S.hx);$("gClass").value=S.cls;$("gEdges").value=S.edges.map(fmtS).join("; ");$("gTarget").value=fmtS(S.target);$("gUnrel").value=fmtS(S.unrel);$("gCenter").value=S.center.join("; ");var G=gaugeCfg();$("gBand").value=fmtS(G.band);$("gBandN").value=G.n;$("gBandW").value=fmtS(G.w)}
 $("gSave").onclick=function(){
-  var hx=num($("gHx").value),t=num($("gTarget").value),u=num($("gUnrel").value);
+  var hx=num($("gHx").value),hk=num($("gHk").value),t=num($("gTarget").value),u=num($("gUnrel").value);
   var e=$("gEdges").value.split(/[;\s]+/).map(num).filter(function(x){return !isNaN(x)});
   var c=$("gCenter").value.split(/[;]+/).map(num);
-  var ok=hx>0&&t>0&&u>0&&u<=2&&e.length>=2&&e.every(function(x,i){return i===0||x>e[i-1]});
-  if(!ok){$("gMsg").textContent="Kiểm tra lại: hₓ, tiêu chí > 0; hệ số kém tin cậy trong (0; 2]; các mốc sai số tăng dần, ngăn bằng dấu chấm phẩy.";return}
-  S.hx=hx;S.target=t;S.unrel=u;S.edges=e;S.cls=$("gClass").value.trim();
+  var ok=hx>0&&hk>0&&t>0&&u>0&&u<=2&&e.length>=2&&e[0]>=0&&e.every(function(x,i){return i===0||x>e[i-1]});
+  if(!ok){$("gMsg").textContent="Kiểm tra lại: hₓ, hₖ, tiêu chí > 0; hệ số kém tin cậy trong (0; 2]; các mốc sai số không âm, tăng dần, ngăn bằng dấu chấm phẩy (nhóm cuối tự mở tới +∞).";return}
+  S.hx=hx;S.hk=hk;S.mode=$("gMode").value==="k"?"k":"x";S.target=t;S.unrel=u;S.edges=e;S.cls=$("gClass").value.trim();
   if(c.length===2&&!isNaN(c[0])&&!isNaN(c[1])){S.center=c;if(map)map.setView(c,15)}
   var gb=num($("gBand").value),gn=Math.round(num($("gBandN").value)),gw=num($("gBandW").value);
   if(!(gb>0&&gn>=2&&gn<=40&&gw>0)){$("gMsg").textContent="Thước đo ngập: chiều cao vạch, bề rộng phải lớn hơn 0; số vạch từ 2 đến 40.";return}
   S.gauge={band:gb,n:gn,w:gw};
-  save();$("gMsg").textContent="Đã lưu cài đặt.";renderHome();
+  save();$("gMsg").textContent="Đã lưu cài đặt.";renderHome();renderLab();renderPins();
 };
+function gaugePreset(g,msg){S.gauge=g;save();fillCfg();$("gMsg").textContent=msg}
+$("gPresetK").onclick=function(){gaugePreset({band:1,n:12,w:1.2},"Đã chọn thước khay 12 vạch × 1 cm, rộng 1,2 cm. Bấm “In thước đo ngập”, in màu 100% rồi đo lại: cả dải đúng 12 cm.")};
+$("gPresetX").onclick=function(){gaugePreset({band:5,n:10,w:3},"Đã chọn thước ngoài đường 10 vạch × 5 cm.")};
+$("hPrint").onclick=function(){printGauge()};
 $("gWipe").onclick=function(){
   if(!window.confirm("Xoá toàn bộ phép đo và điểm ngập trên máy này? Không thể hoàn tác."))return;
   S.lab=[];S.pins=[];S.last=null;save();renderLab();renderPins();$("gMsg").textContent="Đã xoá dữ liệu lớp.";
@@ -1791,7 +2062,7 @@ PT={A:new PhotoTool("ptA","A"),B:new PhotoTool("ptB","B"),C:new PhotoTool("ptC",
 Array.prototype.forEach.call(document.querySelectorAll("[data-go]"),function(b){b.addEventListener("click",function(){stopCam();if(b.dataset.go!=="quick")qStopGeo()})});
 document.addEventListener("visibilitychange",function(){if(document.hidden)stopCam()});
 // expose for tests
-window.__tram={calcA:calcA,calcB:calcB,calcC:calcC,detect:detectGauge,quick:function(){return Q},state:function(){return S}};
+window.__tram={calcA:calcA,calcB:calcB,calcC:calcC,detect:detectGauge,quick:function(){return Q},state:function(){return S},sampleRows:sampleRows,classify:classify,parseCSV:parseCSV,importLab:importLab,importPins:importPins,renderLab:renderLab};
 })();
 </script>
 

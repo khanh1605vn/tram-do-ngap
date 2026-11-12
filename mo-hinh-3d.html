@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Mô hình 3D và hướng dẫn lắp trạm đo ngập trên khay nước – STEM Toán 9, Trường THCS Tân Bình">
+<title>Mô hình 3D trạm đo ngập</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#eef3f5; --panel:#ffffff; --ink:#12303f; --muted:#5a6f7b; --line:#d3dfe5;
+  --water:#1f78b4; --water-ink:#ffffff; --water-soft:#dcebf5;
+  --mag:#c8006e; --mag-soft:#fbe3ef; --chip:#f3f7f9;
+  --ok:#1d8a55; --ok-soft:#e0f3e8; --warn:#a85f00; --warn-soft:#fdf1dc;
+  --sky1:#cfe1ec; --sky2:#f2f7fa;
+  --f:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1820; --panel:#15232d; --ink:#e3edf3; --muted:#98abb8; --line:#273a49;
+    --water:#5bb3ea; --water-ink:#06202e; --water-soft:#163447;
+    --mag:#ff5fae; --mag-soft:#3a1a2c; --chip:#1b2c38;
+    --ok:#4fcf8d; --ok-soft:#153526; --warn:#f0b257; --warn-soft:#3a2c14;
+    --sky1:#0f1c26; --sky2:#1d2f3c; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1820; --panel:#15232d; --ink:#e3edf3; --muted:#98abb8; --line:#273a49;
+  --water:#5bb3ea; --water-ink:#06202e; --water-soft:#163447;
+  --mag:#ff5fae; --mag-soft:#3a1a2c; --chip:#1b2c38;
+  --ok:#4fcf8d; --ok-soft:#153526; --warn:#f0b257; --warn-soft:#3a2c14;
+  --sky1:#0f1c26; --sky2:#1d2f3c; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font:15px/1.55 var(--f);padding-block:14px 30px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:16px}
+button{font-family:var(--f)}
+header.top h1{margin:0;font-size:1.4rem;font-weight:700;text-wrap:balance}
+header.top p{margin:4px 0 0;color:var(--muted);max-width:78ch}
+nav.jump{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+nav.jump a,nav.jump button{border:1px solid var(--line);background:var(--panel);color:var(--ink);text-decoration:none;font:500 .85rem var(--f);padding:6px 12px;border-radius:999px;cursor:pointer}
+nav.jump a:hover,nav.jump button:hover{border-color:var(--water)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:14px;align-items:start}
+@media (max-width:960px){.main{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;height:min(78vh,700px);min-height:380px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--sky2);touch-action:none}
+@media (max-width:960px){.stage{height:62vh}}
+.stage canvas{display:block;width:100%;height:100%;cursor:grab}
+.views{position:absolute;left:10px;right:10px;top:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;z-index:3}
+.views button{pointer-events:auto;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--ink);font:500 .82rem var(--f);padding:6px 11px;border-radius:999px;cursor:pointer;backdrop-filter:blur(4px)}
+.views button[aria-pressed="true"]{background:var(--water);border-color:var(--water);color:var(--water-ink)}
+.stepTag{position:absolute;left:10px;bottom:10px;max-width:calc(100% - 20px);background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:12px;padding:7px 12px;font-size:.86rem;pointer-events:none;z-index:3}
+.stepTag b{color:var(--mag)}
+.pick{position:absolute;left:10px;bottom:52px;max-width:min(340px,calc(100% - 20px));background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--mag);border-radius:12px;padding:9px 34px 9px 12px;font-size:.86rem;z-index:4;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.pick[hidden]{display:none}
+.pick b{display:block;font-size:.95rem}
+.pick .x{position:absolute;right:6px;top:6px;border:0;background:transparent;color:var(--muted);font-size:1.1rem;cursor:pointer;width:24px;height:24px}
+.fallback{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--muted)}
+.camui{position:absolute;inset:0;pointer-events:none;display:none;z-index:2}
+.stage.lens .camui{display:block}
+.camui .grid{position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(33.3% - 1px),rgba(255,255,255,.45) 33.3%,transparent calc(33.3% + 1px),transparent calc(66.6% - 1px),rgba(255,255,255,.45) 66.6%,transparent calc(66.6% + 1px)),linear-gradient(180deg,transparent calc(33.3% - 1px),rgba(255,255,255,.45) 33.3%,transparent calc(33.3% + 1px),transparent calc(66.6% - 1px),rgba(255,255,255,.45) 66.6%,transparent calc(66.6% + 1px))}
+.camui .chip{position:absolute;top:56px;left:50%;transform:translateX(-50%);background:rgba(10,20,28,.75);color:#fff;border-radius:999px;padding:4px 12px;font-size:.8rem;white-space:nowrap}
+.camui .level{position:absolute;top:90px;left:50%;transform:translateX(-50%);border-radius:999px;padding:4px 12px;font:600 .8rem var(--f);color:#fff;background:#1d8a55;white-space:nowrap}
+.camui .level.warn{background:#c26a00}
+.camui .shutter{position:absolute;bottom:58px;left:50%;width:58px;height:58px;margin-left:-29px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.35)}
+.camui .toast{position:absolute;bottom:128px;left:50%;transform:translateX(-50%);background:rgba(10,20,28,.82);color:#fff;padding:6px 12px;border-radius:10px;font-size:.85rem;opacity:0;transition:opacity .3s;white-space:nowrap}
+.camui .toast.on{opacity:1}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5}
+.flash.on{animation:fl .7s ease-out}
+@keyframes fl{0%{opacity:.95}100%{opacity:0}}
+.panel{display:grid;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
+.card h2{margin:0 0 10px;font-size:1rem;font-weight:600}
+.gchips{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.gchips button{flex:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);font:500 .78rem var(--f);padding:5px 9px;border-radius:999px;cursor:pointer}
+.gchips button[aria-current="true"]{background:var(--mag);border-color:var(--mag);color:#fff}
+.gchips button.done{border-color:var(--ok);color:var(--ok)}
+.prog{height:6px;background:var(--chip);border-radius:6px;margin:8px 0 10px;overflow:hidden}
+.prog span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--water),var(--mag));transition:width .4s}
+.kicker{margin:0;color:var(--mag);font-weight:600;font-size:.82rem}
+.card h3{margin:2px 0 6px;font-size:1.05rem;line-height:1.3}
+.stext{margin:0 0 8px;font-size:.95rem}
+.uses{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.uses>span{display:inline-flex;align-items:center;gap:5px;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:2px 9px 2px 3px;font-size:.8rem}
+.num{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:999px;background:var(--water);color:var(--water-ink);font:700 .72rem var(--f);font-variant-numeric:tabular-nums}
+.chk{background:var(--ok-soft);border-left:4px solid var(--ok);border-radius:8px;padding:7px 10px;font-size:.88rem;margin-bottom:8px}
+.tip{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:8px;padding:7px 10px;font-size:.88rem}
+.chk[hidden],.tip[hidden]{display:none}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:9px 13px;font:600 .88rem var(--f);cursor:pointer;background:var(--water);color:var(--water-ink)}
+.btn.ghost{background:var(--water-soft);color:var(--water)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.views button:focus-visible,.gchips button:focus-visible,.mini:focus-visible,input:focus-visible,nav.jump a:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.hint{margin:0 0 8px;font-size:.85rem;color:var(--muted)}
+.ctl label{display:flex;justify-content:space-between;font-size:.88rem;color:var(--muted)}
+.ctl label b{color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--water)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+.presets button{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:500 .8rem var(--f);padding:5px 10px;border-radius:999px;cursor:pointer}
+.presets button[aria-pressed="true"]{background:var(--water);color:var(--water-ink);border-color:var(--water)}
+.liters{margin:0 0 8px;font-size:.86rem;font-variant-numeric:tabular-nums}
+.calc{display:grid;gap:8px}
+.calc section{border-left:4px solid var(--line);padding-left:10px}
+.calc section.a{border-color:var(--mag)}.calc section.b{border-color:#e67e22}.calc section.c{border-color:var(--water)}
+.calc h4{margin:0;font-size:.86rem}
+.calc p{margin:2px 0 0;font-size:.85rem;font-variant-numeric:tabular-nums;white-space:pre-line}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;scroll-margin-top:12px}
+.sec>h2{margin:0 0 4px;font-size:1.2rem}
+.sec>.lead{margin:0 0 14px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.box{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--chip)}
+.box h3{margin:0 0 6px;font-size:.98rem}
+.box ul,.box ol{margin:0;padding-left:20px;display:grid;gap:3px;font-size:.9rem}
+.pbar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;font-size:.9rem}
+.pbar .bar{flex:1;height:8px;background:var(--chip);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.pbar .bar span{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.igroup{margin-top:14px}
+.igroup h3{margin:0 0 8px;font-size:.98rem}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--chip)}
+.item.done{background:var(--ok-soft);border-color:var(--ok)}
+.item input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);grid-row:span 2}
+.item .nm{font-weight:600;font-size:.92rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.item .qty{color:var(--muted);font-weight:500}
+.item .meta{grid-column:2/4;font-size:.82rem;color:var(--muted)}
+.item .meta i{font-style:normal;color:var(--water)}
+.mini{border:1px solid var(--line);background:var(--panel);color:var(--water);font:600 .76rem var(--f);padding:4px 9px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.mini:hover{border-color:var(--water)}
+.bps{display:grid;gap:12px}
+article.bp{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--panel)}
+.bp header{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.bpn{flex:none;width:42px;height:42px;border-radius:50%;background:var(--mag);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.1rem}
+.bp h3{margin:0;font-size:1.05rem}
+.bp .who{margin:0;color:var(--muted);font-size:.85rem}
+.bp .needs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px;align-items:center;font-size:.85rem}
+.bp ol{margin:0 0 10px;padding-left:0;list-style:none;display:grid;gap:6px;counter-reset:s}
+.bp ol li{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;padding:7px 8px;border-radius:10px;background:var(--chip);counter-increment:s;font-size:.92rem}
+.bp ol li::before{content:counter(s);display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--water);color:var(--water);font-weight:700;font-size:.8rem}
+.bp .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.tw{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:.9rem;min-width:520px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+.tbl th{background:var(--chip);font-weight:600}
+.checks{display:grid;gap:6px}
+.checks label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--chip);font-size:.92rem;cursor:pointer}
+.checks label.done{background:var(--ok-soft);border-color:var(--ok)}
+.checks input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--ok)}
+.status{margin:10px 0 0;font-weight:600}
+.status.ok{color:var(--ok)}
+.formula{font-variant-numeric:tabular-nums;background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:inline-block;margin:4px 0}
+footer{color:var(--muted);font-size:.8rem}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .main,nav.jump,.mini,.noprint{display:none!important}
+  .sec{border:0;padding:0;break-inside:auto}
+  article.bp,.box,.item{break-inside:avoid}
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Mô hình 3D và hướng dẫn lắp trạm đo ngập</h1>
+    <p>Xem mô hình từ lúc bày vật liệu trên bàn đến lúc lắp xong. Mỗi bước có dụng cụ chuyển động đúng thao tác. Chạm vào một món đồ trên mô hình để biết tên và công dụng. Kích thước tính bằng centimét.</p>
+    <nav class="jump" aria-label="Mục lục">
+      <a href="#mo-hinh">Mô hình 3D</a>
+      <a href="#chuan-bi">Vật liệu và dụng cụ</a>
+      <a href="#huong-dan">Hướng dẫn lắp</a>
+      <a href="#do-nuoc">Kiểm tra và đổ nước</a>
+      <a href="#an-toan">An toàn</a>
+      <a href="https://khanh1605vn.github.io/tram-do-ngap/" target="_blank" rel="noopener">Web app</a>
+      <button type="button" id="printBtn">In hướng dẫn</button>
+    </nav>
+  </header>
+
+  <section class="main" id="mo-hinh" aria-label="Mô hình 3D">
+    <div class="stage" id="stage">
+      <div class="fallback" id="fallback">Đang tải mô hình 3D…</div>
+      <div class="views" role="group" aria-label="Góc nhìn">
+        <button type="button" data-view="all" aria-pressed="false">Toàn cảnh</button>
+        <button type="button" data-view="lens" aria-pressed="false">Góc điện thoại</button>
+        <button type="button" data-view="top" aria-pressed="false">Nhìn từ trên</button>
+        <button type="button" id="spinBtn" aria-pressed="false">Tự xoay</button>
+        <button type="button" id="explode" aria-pressed="false">Tách rời</button>
+        <button type="button" id="labelsBtn" aria-pressed="true">Nhãn</button>
+      </div>
+      <div class="camui" aria-hidden="true">
+        <div class="grid"></div>
+        <div class="chip">App Trạm đo ngập · Mở camera</div>
+        <div class="level" id="level">Máy thẳng</div>
+        <div class="toast" id="toast">Đã chụp ảnh khô</div>
+        <div class="shutter"></div>
+      </div>
+      <div class="flash" id="flash"></div>
+      <div class="pick" id="pick" hidden role="status"><button class="x" id="pickX" type="button" aria-label="Đóng">×</button><div id="pickBody"></div></div>
+      <div class="stepTag" id="stepTag"></div>
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <div class="gchips" id="gchips" aria-label="Các phần lắp"></div>
+        <div class="prog"><span id="progFill"></span></div>
+        <p class="kicker" id="sKicker"></p>
+        <h3 id="sTitle"></h3>
+        <p class="stext" id="sText"></p>
+        <div class="uses" id="sUses"></div>
+        <div class="chk" id="sChk" hidden></div>
+        <div class="row">
+          <button class="btn ghost" id="prev" type="button">Bước trước</button>
+          <button class="btn ghost" id="next" type="button">Bước sau</button>
+          <button class="btn" id="auto" type="button">Lắp tự động</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Đổ nước và đo</h2>
+        <p class="hint" id="wHint">Lắp xong mới đổ nước. Bấm một mực nước để xem chai nước rót vào mô hình hoàn chỉnh.</p>
+        <p class="hint">Số trên mô hình chỉ để hình dung. Khi thử nghiệm, d₀ phải đọc bằng thước trên khay thật.</p>
+        <div class="presets" role="group" aria-label="Rót nước">
+          <button type="button" data-pour="3.5">Rót tới mực 1 · 3,5 cm</button>
+          <button type="button" data-pour="6.5">Mực 2 · 6,5 cm</button>
+          <button type="button" data-pour="10">Mực 3 · 10 cm</button>
+          <button type="button" data-pour="0">Xả hết</button>
+          <button type="button" id="rainBtn" aria-pressed="false">Trời mưa</button>
+        </div>
+        <div class="ctl"><label for="d">Độ sâu d₀ <b id="dv">0,0 cm</b></label><input type="range" id="d" min="0" max="12" step="0.1" value="0"></div>
+        <p class="liters" id="liters"></p>
+        <div class="calc">
+          <section class="a"><h4>Thước đo ngập 12 vạch × 1 cm</h4><p id="ca"></p></section>
+          <section class="b"><h4>Bánh xe R = 7 cm</h4><p id="cb"></p></section>
+          <section class="c"><h4>Cột nghiêng α = 20°</h4><p id="cc"></p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="chuan-bi">
+    <h2>Vật liệu và dụng cụ cho một nhóm</h2>
+    <p class="lead">Số thứ tự trùng với số hiện trên mô hình 3D ở bước “Chuẩn bị”. Đánh dấu từng món khi đã có đủ.</p>
+    <div class="pbar"><span id="iCount">Đã có 0/23 món</span><div class="bar"><span id="iBar"></span></div><button class="mini" id="iReset" type="button">Bỏ đánh dấu</button></div>
+    <div id="itemGroups"></div>
+    <div class="cols" style="margin-top:14px">
+      <div class="box">
+        <h3>Phân vai trong nhóm 7 bạn (HĐ4)</h3>
+        <ul>
+          <li>Nhóm trưởng: điều hành, quản lý thời gian</li>
+          <li>Thư ký: ghi Phiếu số 3, nhập dữ liệu lên web app</li>
+          <li>Người chụp ảnh: cố định điện thoại, chụp ảnh khô và ảnh ngập đúng góc</li>
+          <li>Người đo: đo trên ảnh, đo d₀, đo góc α</li>
+          <li>Người tính: tính độ sâu, sai số; kiểm tra chéo với web app</li>
+          <li>An toàn và vệ sinh: giữ khay xa ổ điện, lau nước rơi, dọn dụng cụ</li>
+          <li>Thành viên: hỗ trợ đo, chuẩn bị poster</li>
+        </ul>
+        <p class="hint" style="margin:6px 0 0">Khi đo: 3 cặp tính song song A, B, C; em còn lại điều phối và ghi chép.</p>
+      </div>
+      <div class="box">
+        <h3>Giáo viên chuẩn bị trước</h3>
+        <ul>
+          <li>In thước đo ngập mini: Cài đặt GV → thước 12 vạch × 1 cm, rộng 1,2 cm → “In thước đo ngập”, in màu 100%.</li>
+          <li>Cắt sẵn các chi tiết rời (2 que 25 cm, đĩa bán kính 7 cm, dải thước), chia nước theo chai. Trên lớp, nhóm có 3 phút ráp và kiểm tra (HĐ4); các bước cắt, vẽ, kẻ vạch trên mô hình dùng để xem trước giờ học.</li>
+          <li>Pha phẩm màu xanh vào nước trước giờ học.</li>
+          <li>Nhắc học sinh mang compa, ê ke, thước đo độ.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="huong-dan">
+    <h2>Hướng dẫn lắp chi tiết</h2>
+    <p class="lead">5 bộ phận, làm theo thứ tự. Bấm “Xem 3D” ở mỗi bước để xem thao tác trên mô hình.</p>
+    <div class="bps" id="bps"></div>
+  </section>
+
+  <section class="sec" id="do-nuoc">
+    <h2>Kiểm tra và đổ nước</h2>
+    <p class="lead">Chỉ đổ nước khi bạn kiểm tra của nhóm xác nhận đủ 7 mục.</p>
+    <div class="cols">
+      <div>
+        <div class="checks" id="checks"></div>
+        <p class="status" id="cStatus"></p>
+      </div>
+      <div class="box">
+        <h3>Ở mỗi mực nước: 4 việc theo thứ tự</h3>
+        <ol>
+          <li>Chờ mặt nước yên khoảng 30 giây.</li>
+          <li>Chụp bằng app: Chụp nhanh tự đọc thước đo ngập; phương pháp A, B, C thì chạm 4 điểm trên ảnh.</li>
+          <li>Đo độ sâu thật d₀: cắm thước thẳng đứng chạm đáy, mắt ngang mặt nước khi đọc vạch.</li>
+          <li>Nhập dₜ và d₀ vào mục Thử nghiệm của app và Phiếu số 3.</li>
+        </ol>
+        <p style="margin:8px 0 0;font-size:.9rem">Sai số: <span class="formula">Δ = |dₜ − d₀| · δ = Δ : d₀ × 100%</span><br>Tiêu chí đạt: δ dưới 15%. Đổ nước lên mực sau: không nhấc điện thoại, chỉ nâng thêm sách nếu cần.</p>
+      </div>
+    </div>
+    <h3 style="margin:16px 0 8px;font-size:1rem">Ba mực nước thử nghiệm (khay 40 × 15 cm: 600 cm² × độ sâu)</h3>
+    <div class="tw"><table class="tbl">
+      <thead><tr><th>Mực</th><th>Độ sâu đích d₀</th><th>So với bánh xe</th><th>Nước cần thêm</th><th class="noprint"></th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>khoảng 3,5 cm</td><td>Dưới trục (trục còn nổi)</td><td>khoảng 2,1 lít</td><td class="noprint"><button class="mini" type="button" data-pour="3.5">Xem 3D</button></td></tr>
+        <tr><td>2</td><td>khoảng 6,5 cm</td><td>Gần trục</td><td>thêm khoảng 1,8 lít</td><td class="noprint"><button class="mini" type="button" data-pour="6.5">Xem 3D</button></td></tr>
+        <tr><td>3</td><td>khoảng 10 cm</td><td>Trên trục (trục đã chìm)</td><td>thêm khoảng 2,1 lít</td><td class="noprint"><button class="mini" type="button" data-pour="10">Xem 3D</button></td></tr>
+      </tbody>
+    </table></div>
+    <h3 style="margin:16px 0 8px;font-size:1rem">Lỗi thường gặp và cách sửa</h3>
+    <div class="tw"><table class="tbl">
+      <thead><tr><th>Lỗi</th><th>Dấu hiệu</th><th>Cách sửa</th></tr></thead>
+      <tbody>
+        <tr><td>Bánh xe nổi lên</td><td>Mép dưới đĩa hở khỏi đáy</td><td>Kẹp chặt hơn, dán 1 đồng xu sau mép dưới đĩa</td></tr>
+        <tr><td>Cột nghiêng bị đổ</td><td>α đổi sau mỗi lần đổ nước</td><td>Nặn đế to hơn; đo lại α ở mỗi mực</td></tr>
+        <tr><td>App không thấy thước</td><td>Báo “Không thấy thước đo ngập”</td><td>Chụp gần hơn, thêm đèn, tránh chói trên thành khay</td></tr>
+        <tr><td>Lệch nhiều so với d₀</td><td>Sai số trên 15%</td><td>Kiểm tra máy nghiêng, thẻ tỉ lệ cùng mặt phẳng vật mốc</td></tr>
+        <tr><td>Mặt nước khó thấy</td><td>Vạch nước mờ trên ảnh</td><td>Thêm phẩm màu, để nền trắng phía sau khay</td></tr>
+        <tr><td>Thước, thẻ bị ướt</td><td>Chạy màu, cong mép</td><td>Bọc lại băng keo trong kín cả mép</td></tr>
+      </tbody>
+    </table></div>
+    <p class="hint" style="margin-top:8px">Ghi lại lỗi gặp phải vào Phiếu số 3: đây là nguồn sai số để thảo luận ở HĐ5.</p>
+  </section>
+
+  <section class="sec" id="an-toan">
+    <h2>An toàn và dọn dẹp</h2>
+    <div class="cols">
+      <div class="box">
+        <h3>An toàn</h3>
+        <ul>
+          <li>Không đặt khay gần ổ điện hoặc dây sạc.</li>
+          <li>Lau ngay nước đổ ra sàn.</li>
+          <li>Cắt bìa theo hướng ra xa người.</li>
+          <li>Điện thoại luôn nằm trên chồng sách, không cầm sát mặt nước.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Dọn dẹp · 5 phút cuối</h3>
+        <ul>
+          <li>Đổ nước vào xô chung, không đổ vào bồn rửa có đất nặn.</li>
+          <li>Lau khô khay.</li>
+          <li>Giữ bánh xe, thước, thẻ tỉ lệ trong túi zip của nhóm.</li>
+          <li>Vê đất nặn thành cục, cất vào hộp.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <footer>Trạm đo ngập bỏ túi · Chủ đề STEM Toán 9 · Trường THCS Tân Bình · <a href="https://khanh1605vn.github.io/tram-do-ngap/" target="_blank" rel="noopener" style="color:inherit">Mở web app</a></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const fmt=(x,n=1)=>(Math.round(x*Math.pow(10,n))/Math.pow(10,n)).toFixed(n).replace(".",",");
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+const store={get(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+$("printBtn").onclick=()=>window.print();
+
+// ================= DỮ LIỆU =================
+const PI=Math.PI,DEG=PI/180;
+const TW=40,TD=15,TH=16,TT=0.4,PX=-12,WX=1,CX=12,R=7,ALPHA=20*DEG,Y0=-0.8,PZ=47.5,PHX=7;
+const ITEMS=[
+ {n:1,name:"Khay hoặc hộp nhựa trong",qty:"1",note:"Đáy 40 × 15 cm, cao từ 16 cm",use:"Bộ phận 1",g:"vl",b:[-16,19,0]},
+ {n:2,name:"Khăn lót bàn, khăn lau",qty:"2",note:"Lót dưới khay; lau ngay nước đổ ra",use:"An toàn",g:"at",b:[-40,4,-16]},
+ {n:3,name:"Giấy bìa đen",qty:"1 tờ",note:"Lót bên ngoài, dưới đáy khay",use:"Bộ phận 1",g:"vl",b:[0,3,-22]},
+ {n:4,name:"Băng keo giấy",qty:"1 cuộn",note:"Kẻ vạch đường dưới đáy khay",use:"Bộ phận 1",g:"vl",b:[-32,5,-2]},
+ {n:5,name:"Bút lông đỏ",qty:"1",note:"Đánh dấu 3 vị trí trên thành khay",use:"Bộ phận 1",g:"dc",b:[-7,3,30]},
+ {n:6,name:"Thước 30 cm",qty:"1",note:"Đo, kẻ vạch, kiểm tra kích thước",use:"Cả mô hình",g:"dc",b:[-5,3,25]},
+ {n:7,name:"Ê ke",qty:"1",note:"Kiểm tra vuông góc với đáy",use:"Bộ phận 1, 2, 4",g:"dc",b:[-32,3,24]},
+ {n:8,name:"Que gỗ vuông hoặc ống nhựa",qty:"2",note:"Dài 25 cm, cạnh khoảng 1,5 cm",use:"Bộ phận 2, 4",g:"vl",b:[-10,4,17]},
+ {n:9,name:"Kéo",qty:"1",note:"Cắt dải thước, cắt bìa",use:"Bộ phận 2, 3",g:"dc",b:[-20,3,32]},
+ {n:10,name:"Thước đo ngập mini",qty:"1 dải",note:"In từ app: 12 vạch × 1 cm, rộng 1,2 cm",use:"Bộ phận 2",g:"vl",b:[12,3,14]},
+ {n:11,name:"Băng keo trong khổ lớn",qty:"1 cuộn",note:"Bọc chống thấm bánh xe, thước, thẻ",use:"Bộ phận 2, 3",g:"vl",b:[-32,5,7]},
+ {n:12,name:"Thẻ tỉ lệ",qty:"2",note:"Bìa trắng 10 × 1 cm, vạch đen 2 đầu",use:"Bộ phận 2, 5",g:"vl",b:[12,3,18]},
+ {n:13,name:"Đất nặn",qty:"3 cục",note:"Cỡ quả trứng gà, làm đế",use:"Bộ phận 2, 4",g:"vl",b:[-44,6,2]},
+ {n:14,name:"Bìa cứng (bìa hộp giấy)",qty:"1 tờ",note:"Đủ cắt hình tròn bán kính 7 cm",use:"Bộ phận 3",g:"vl",b:[30,3,20]},
+ {n:15,name:"Compa",qty:"1",note:"Vẽ đường tròn bán kính 7 cm",use:"Bộ phận 3",g:"dc",b:[7,3,34]},
+ {n:16,name:"Bút chì, bút lông đen",qty:"1 + 1",note:"Kẻ đường kính, tô viền bánh xe",use:"Bộ phận 3",g:"dc",b:[19,3,36]},
+ {n:17,name:"Que kem gỗ",qty:"1",note:"Dài khoảng 11–12 cm",use:"Bộ phận 3",g:"vl",b:[46,3,12]},
+ {n:18,name:"Thanh gỗ hoặc thước kẻ cũ",qty:"1",note:"Dài hơn bề ngang khay (khoảng 20 cm)",use:"Bộ phận 3",g:"vl",b:[46,4,26]},
+ {n:19,name:"Kẹp bướm (kẹp giấy đen)",qty:"1",note:"Cỡ vừa",use:"Bộ phận 3",g:"vl",b:[46,4,4]},
+ {n:20,name:"Thước đo độ",qty:"1",note:"Chỉnh góc α = 20°",use:"Bộ phận 4",g:"dc",b:[31,3,38]},
+ {n:21,name:"Sách dày và 1 hộp nhỏ",qty:"3–4 quyển",note:"Kê điện thoại",use:"Bộ phận 5",g:"ch",b:[-34,10,50]},
+ {n:22,name:"Điện thoại có app Trạm đo ngập",qty:"1",note:"Mở bằng đường dẫn hoặc mã QR; để trong túi zip trong khi gần nước",use:"Bộ phận 5",g:"ch",b:[-8,3,50]},
+ {n:23,name:"Chai nước 1,5 lít pha phẩm màu xanh",qty:"4 chai",note:"Màu giúp thấy rõ mặt nước trên ảnh",use:"Đổ nước",g:"ch",b:[38,35,-24]}
+];
+const IGROUPS=[["vl","Vật liệu làm mô hình"],["dc","Dụng cụ học tập"],["ch","Đo, chụp và đổ nước"],["at","An toàn"]];
+const GROUPS=[
+ {name:"Bày vật liệu và dụng cụ",short:"Chuẩn bị"},
+ {name:"Khay nước và mặt đường",short:"1 · Khay",who:"2 bạn phụ trách khay và hai cột",chk:"Đặt ê ke sát thành trước: 3 vạch đỏ vuông góc với đáy.",note:"Đáy khay là mặt đường, nơi độ sâu d = 0. Giấy đen giúp ảnh chụp rõ vạch màu và mặt nước; ba vạch đỏ giữ các vật mốc đúng chỗ, cùng một mặt phẳng."},
+ {name:"Cột mốc thẳng, thước đo ngập, thẻ tỉ lệ",short:"2 · Cột thẳng",who:"2 bạn phụ trách khay và hai cột",chk:"Que không lắc khi chạm nhẹ; mặt trước dải thước không bị đất nặn che. Nặn đế phía sau và hai bên que, chừa mặt trước.",note:"Thước đo ngập giúp app tự đọc mực nước ở chế độ Chụp nhanh. Thẻ tỉ lệ đặt cao hơn mực nước lớn nhất (10 cm) để luôn nhìn thấy trên ảnh."},
+ {name:"Bánh xe treo trên thanh ngang",short:"3 · Bánh xe",who:"2 bạn: một bạn vẽ và cắt, một bạn chuẩn bị que kem, thanh gỗ, kẹp bướm",chk:"Tâm O cách đáy đúng 7 cm; đĩa không nghiêng khi nhìn từ trước.",note:"Thiếu bìa cứng: dùng nắp hộp nhựa tròn có đường kính biết trước. Nếu đĩa nổi khi đổ nước: kẹp chặt hơn hoặc dán 1 đồng xu sau mép dưới đĩa."},
+ {name:"Cột nghiêng góc α = 20°",short:"4 · Cột nghiêng",who:"2 bạn phụ trách khay và hai cột",chk:"Đầu trên que cách phương thẳng đứng khoảng 25 · sin 20° ≈ 8,6 cm (đo ngang bằng thước).",note:"Que nghiêng phải nằm trong mặt phẳng song song với thành trước để ảnh chụp thấy đúng góc. Nhóm muốn thử thêm: góc 30° cho thấy sai lệch lớn hơn khi quên hiệu chỉnh."},
+ {name:"Thẻ tỉ lệ cho bánh xe và chỗ chụp ảnh",short:"5 · Chỗ chụp",who:"1 bạn phụ trách chỗ chụp ảnh",chk:"Ảnh khô thấy đủ 3 vật mốc, 2 thẻ tỉ lệ và đỉnh thước đo ngập.",note:"Đánh dấu vị trí chồng sách bằng băng keo để mọi lần chụp đều cùng một chỗ. Chụp nghiêng làm sai tỉ lệ; người chụp không tựa tay lên bàn khi bấm nút."},
+ {name:"Lắp xong, sẵn sàng đổ nước",short:"Xong"}
+];
+const STEPS=[
+ {g:0,t:"Bày đủ vật liệu và dụng cụ lên bàn đã lót khăn. Chạm vào từng món trên mô hình để xem tên và công dụng; số trên mô hình trùng với danh sách bên dưới.",use:[],cam:"table"},
+ {g:1,t:"Lau khô khay, đặt trên bàn đã lót khăn, chỗ phẳng và đủ sáng.",use:[1,2],cam:"tray",hl:[0,19.5,0]},
+ {g:1,t:"Lót giấy bìa đen bên ngoài, dưới đáy khay; không để giấy trong nước.",use:[3],cam:"tray",hl:[-8,4,0]},
+ {g:1,t:"Dán băng keo giấy trắng làm vạch kẻ đường dưới đáy, gần thành trước.",use:[4],cam:"front",hl:[0,3.5,4.5],dur:3.2},
+ {g:1,t:"Trên thành trước, đo từ mép trái, kẻ 3 vạch đỏ sát đáy: 8 cm (cột thẳng), 21 cm (bánh xe), 32 cm (cột nghiêng).",use:[6,5],cam:"front",dims:["red"],dur:4.2},
+ {g:1,t:"Kiểm tra khay cao từ 16 cm, đáy không cong vênh. Đặt ê ke sát thành trước: 3 vạch đỏ vuông góc với đáy.",use:[7,6],cam:"front",chk:1,dims:["h16"],hl:[WX+4,15,8]},
+ {g:2,t:"Đo và cắt que gỗ đúng 25 cm. Ghi H = 25 cm vào Phiếu số 3.",use:[8,6],cam:"work",hl:[PX,Y0+28,13],dims:["p25"]},
+ {g:2,t:"Cắt dải thước đo ngập mini (12 vạch hồng sẫm và vàng, mỗi vạch 1 cm). Đo lại: cả dải đúng 12 cm.",use:[10,9,6],cam:"work",hl:[PX+2.6,Y0+15,13],dims:["s12"]},
+ {g:2,t:"Bọc dải thước bằng băng keo trong, dán lên mặt trước que, vạch vàng cuối cùng sát đầu que (đầu chạm đáy, mốc 0 cm).",use:[11],cam:"work",hl:[PX,Y0+15,14]},
+ {g:2,t:"Bọc thẻ tỉ lệ 10 cm, dán lên mặt trước que từ độ cao 13 cm đến 23 cm, thẳng hàng với dải thước.",use:[12,11],cam:"work",hl:[PX,Y0+27,14],dims:["c13"]},
+ {g:2,t:"Nặn một cục đất thành nửa quả cầu, ấn chặt xuống đáy khay ngay sau vạch đỏ 8 cm.",use:[13],cam:"postIn",hl:[PX,6,-0.6]},
+ {g:2,t:"Cắm que vào giữa cục đất cho đầu que chạm đáy. Mặt dán thước quay ra thành trước khay.",use:[8],cam:"postIn",hl:[PX,28.5,0]},
+ {g:2,t:"Đặt ê ke sát que theo hai hướng (trước và bên cạnh), chỉnh đến khi que vuông góc với đáy rồi miết chặt đất quanh chân.",use:[7],cam:"postIn",chk:1,dur:5.2},
+ {g:3,t:"Mở compa đúng 7 cm, vẽ đường tròn trên bìa cứng. Giữ vết kim compa: đó là tâm O.",use:[15,14],cam:"draw",dur:4.8},
+ {g:3,t:"Kẻ hai đường kính vuông góc qua O bằng bút chì, tô đậm điểm O và viết chữ “O”.",use:[16,6],cam:"draw"},
+ {g:3,t:"Tô viền đường tròn bằng bút lông đen (giống lốp xe) rồi cắt theo viền ngoài.",use:[16,9],cam:"draw",dur:4.2},
+ {g:3,t:"Đo lại đường kính bằng thước: phải đúng 14 cm. Ghi R = 7 cm vào Phiếu số 3.",use:[6],cam:"draw",dims:["d14"]},
+ {g:3,t:"Bọc kín hai mặt đĩa bằng băng keo trong, dán tràn qua mép để nước không thấm.",use:[11],cam:"draw"},
+ {g:3,t:"Dán que kem thẳng đứng phía sau đĩa: đầu dưới tại tâm O, phần còn lại thò lên trên khoảng 5 cm.",use:[17],cam:"wheelOut",hl:[WX,Y0+22,14]},
+ {g:3,t:"Đặt thanh gỗ bắc ngang miệng khay, ngay trên vạch đỏ 21 cm. Kẹp que kem vào thanh gỗ bằng kẹp bướm.",use:[18,19],cam:"wheelIn",hl:[WX,22,0]},
+ {g:3,t:"Nới kẹp, trượt que đến khi mép dưới đĩa vừa chạm đáy, mặt đĩa song song thành trước, rồi kẹp chặt.",use:[19],cam:"wheelIn",chk:1,dims:["o7"]},
+ {g:4,t:"Đo và cắt que thứ hai đúng 25 cm. Ghi chiều dài vào Phiếu số 3.",use:[8,6],cam:"workR",hl:[CX,Y0+28,13],dims:["t25"]},
+ {g:4,t:"Kẻ vạch ngang trên que mỗi 1 cm, từ đầu dưới lên 15 cm (giúp đọc phần chìm khi kiểm tra lại).",use:[6],cam:"workR",dur:3.8},
+ {g:4,t:"Ấn cục đất nặn thứ hai xuống đáy khay ngay sau vạch đỏ 32 cm.",use:[13],cam:"tiltIn",hl:[CX,6,-0.6]},
+ {g:4,t:"Cắm que vào cục đất cho đầu que chạm đáy, nghiêng về phía phải (xa bánh xe).",use:[8],cam:"tiltIn",hl:[CX+6,27,0]},
+ {g:4,t:"Đặt ê ke đứng tại chân que để có phương thẳng đứng. Áp tâm thước đo độ vào chân que, vạch 0° trùng cạnh đứng của ê ke. Chỉnh que đúng vạch 20° rồi miết chặt đất (có thể đo lại bằng ứng dụng đo góc đặt dọc theo que).",use:[7,20],cam:"tiltFoot",dims:["a20"],dur:4},
+ {g:4,t:"Nhìn từ trên xuống: que song song thành trước. Kiểm tra: đầu trên que cách phương thẳng đứng khoảng 25 · sin 20° ≈ 8,6 cm. Ghi α vào Phiếu số 3.",use:[6],cam:"tiltCheck",chk:1,dims:["t86"]},
+ {g:5,t:"Dán thẻ tỉ lệ thứ hai nằm ngang trên mặt trước đĩa, cách đáy khay 12 cm.",use:[12],cam:"wheelIn",hl:[WX,15.5,1],dims:["c12"]},
+ {g:5,t:"Chồng 3–4 quyển sách trước khay, cách khoảng 40 cm, đối diện vạch đỏ 21 cm.",use:[21],cam:"side",dims:["p40"],dur:3.6},
+ {g:5,t:"Đặt điện thoại nằm ngang, dựa vào hộp nhỏ phía sau, mặt máy song song thành trước khay.",use:[22,21],cam:"side",hl:[PHX,16,PZ]},
+ {g:5,t:"Thêm hoặc bớt sách để ống kính ngang tầm mực nước sắp đo (khoảng 7 cm trên đáy khay).",use:[21],cam:"side",dims:["l7"]},
+ {g:5,t:"Mở app, chọn phương pháp, bấm “Mở camera”; chỉnh máy đến khi dòng báo độ nghiêng chuyển xanh.",use:[22],cam:"lens",dur:3.6},
+ {g:5,t:"Chụp một ảnh khô: thấy đủ 3 vật mốc, 2 thẻ tỉ lệ và đỉnh thước đo ngập.",use:[22],cam:"lens",chk:1,dur:3.6},
+ {g:6,t:"Mô hình đã lắp xong. Đối chiếu bảng kiểm 7 mục, rồi rót nước tới 3 mực để đo. Thử nút “Trời mưa” để xem nước dâng dần.",use:[23],cam:"all"}
+];
+const LAST=STEPS.length-1;
+const CHECKS=["Khay trên khăn lót, bàn phẳng, không có ổ điện gần khay","Cột thẳng vuông góc với đáy, dải thước quay ra phía trước","Mép dưới bánh xe chạm đáy, tâm O cách đáy 7 cm","Cột nghiêng đúng 20°, song song thành trước","Hai thẻ tỉ lệ cao hơn 10 cm, không bị cong","Điện thoại cách khay 40 cm, ảnh khô thấy đủ 3 vật mốc","Đã ghi H, R, α vào Phiếu số 3"];
+const itemName=n=>ITEMS[n-1].name;
+
+// ================= PHẦN VĂN BẢN =================
+(function buildText(){
+  const saved=store.get("tdn-items")||{};
+  const box=$("itemGroups");
+  box.innerHTML=IGROUPS.map(([g,title])=>'<div class="igroup"><h3>'+title+'</h3><div class="items">'+ITEMS.filter(i=>i.g===g).map(i=>
+    '<label class="item'+(saved[i.n]?" done":"")+'"><input type="checkbox" data-n="'+i.n+'"'+(saved[i.n]?" checked":"")+'>'+
+    '<span class="nm"><span class="num">'+i.n+'</span>'+esc(i.name)+' <span class="qty">· '+esc(i.qty)+'</span></span>'+
+    '<button class="mini" type="button" data-see="'+i.n+'">Xem 3D</button>'+
+    '<span class="meta">'+esc(i.note)+' · <i>'+esc(i.use)+'</i></span></label>').join("")+'</div></div>').join("");
+  function count(){const s=store.get("tdn-items")||{};const c=ITEMS.filter(i=>s[i.n]).length;$("iCount").textContent="Đã có "+c+"/"+ITEMS.length+" món";$("iBar").style.width=(c/ITEMS.length*100)+"%"}
+  box.addEventListener("change",e=>{const el=e.target;if(!el.dataset.n)return;const s=store.get("tdn-items")||{};s[el.dataset.n]=el.checked;store.set("tdn-items",s);el.closest(".item").classList.toggle("done",el.checked);count()});
+  $("iReset").onclick=()=>{store.set("tdn-items",{});box.querySelectorAll("input").forEach(i=>{i.checked=false;i.closest(".item").classList.remove("done")});count()};
+  count();
+  // các bộ phận
+  let html="";
+  for(let g=1;g<=5;g++){
+    const G=GROUPS[g];const ks=STEPS.map((s,k)=>s.g===g?k:-1).filter(k=>k>=0);
+    const used=[...new Set(ks.flatMap(k=>STEPS[k].use))].sort((a,b)=>a-b);
+    html+='<article class="bp"><header><span class="bpn">'+g+'</span><div><h3>Bộ phận '+g+'/5 · '+esc(G.name)+'</h3><p class="who">Phụ trách: '+esc(G.who)+'</p></div></header>'+
+      '<div class="needs"><b>Cần dùng:</b> '+used.map(n=>'<span class="uses" style="margin:0"><span><span class="num">'+n+'</span>'+esc(itemName(n))+'</span></span>').join("")+'</div>'+
+      '<ol>'+ks.map(k=>'<li><span>'+esc(STEPS[k].t)+'</span><button class="mini" type="button" data-k="'+k+'">Xem 3D</button></li>').join("")+'</ol>'+
+      '<div class="two"><div class="chk"><b>Kiểm tra:</b> '+esc(G.chk)+'</div><div class="tip"><b>Lưu ý:</b> '+esc(G.note)+'</div></div></article>';
+  }
+  $("bps").innerHTML=html;
+  // bảng kiểm 7 mục
+  const cs=store.get("tdn-check")||{};
+  $("checks").innerHTML=CHECKS.map((c,i)=>'<label class="'+(cs[i]?"done":"")+'"><input type="checkbox" data-c="'+i+'"'+(cs[i]?" checked":"")+'><span>'+esc(c)+'</span></label>').join("");
+  function cstat(){const s=store.get("tdn-check")||{};const c=CHECKS.filter((_,i)=>s[i]).length;const el=$("cStatus");el.textContent=c===CHECKS.length?"Đủ 7/7 mục: báo giáo viên để đổ nước.":"Đã đạt "+c+"/7 mục. Chưa đổ nước.";el.className="status"+(c===CHECKS.length?" ok":"")}
+  $("checks").addEventListener("change",e=>{const el=e.target;if(el.dataset.c==null)return;const s=store.get("tdn-check")||{};s[el.dataset.c]=el.checked;store.set("tdn-check",s);el.closest("label").classList.toggle("done",el.checked);cstat()});
+  cstat();
+})();
+
+// ================= 3D =================
+const stage=$("stage");
+if(!window.THREE||!THREE.OrbitControls){$("fallback").textContent="Không tải được thư viện 3D. Kiểm tra kết nối mạng rồi tải lại trang. Phần hướng dẫn bên dưới vẫn dùng được.";return}
+$("fallback").remove();
+const T=THREE,V3=(x,y,z)=>new T.Vector3(x,y,z);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+stage.insertBefore(renderer.domElement,stage.firstChild);
+const scene=new T.Scene();
+const camera=new T.PerspectiveCamera(36,1,1,800);
+const controls=new T.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.minDistance=8;controls.maxDistance=260;controls.maxPolarAngle=PI*0.495;controls.autoRotateSpeed=0.9;
+
+function cv(w,h,draw){const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const tx=new T.CanvasTexture(c);tx.anisotropy=4;return tx}
+let raining=false;
+function skyTex(){const r=raining;return cv(4,256,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,r?"#7d8b96":(css("--sky1")||"#cfe1ec"));g.addColorStop(1,r?"#b7c2ca":(css("--sky2")||"#f2f7fa"));x.fillStyle=g;x.fillRect(0,0,w,h)})}
+function applySky(){scene.background=skyTex()}
+applySky();
+if(window.matchMedia)matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applySky);
+new MutationObserver(applySky).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+const hemi=new T.HemisphereLight(0xffffff,0xb8a888,0.72);scene.add(hemi);
+const sun=new T.DirectionalLight(0xffffff,0.8);sun.position.set(-40,110,70);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-80,right:80,top:80,bottom:-80,near:10,far:320});sun.shadow.bias=-0.0006;scene.add(sun);
+const M=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.7},o||{}));
+function mesh(geo,mat,x,y,z,parent){const m=new T.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m}
+function cyl(a,b,r,mat,parent){const d=b.clone().sub(a);const m=new T.Mesh(new T.CylinderGeometry(r,r*0.5,d.length(),10),mat);m.position.copy(a).add(b).multiplyScalar(0.5);m.quaternion.setFromUnitVectors(V3(0,1,0),d.normalize());m.castShadow=true;parent.add(m);return m}
+
+// ---------- kết cấu vẽ bằng canvas ----------
+const woodTex=cv(512,512,(x,w,h)=>{x.fillStyle="#d8bd90";x.fillRect(0,0,w,h);for(let i=0;i<140;i++){x.strokeStyle="rgba(120,80,40,"+(0.04+Math.random()*0.08)+")";x.lineWidth=1+Math.random()*3;x.beginPath();const y=Math.random()*h;x.moveTo(0,y);for(let s=0;s<=8;s++)x.lineTo(s*w/8,y+Math.sin(s+i)*4);x.stroke()}});
+woodTex.wrapS=woodTex.wrapT=T.RepeatWrapping;woodTex.repeat.set(3,2);
+const towelTex=cv(256,128,(x,w,h)=>{x.fillStyle="#8fc7b8";x.fillRect(0,0,w,h);x.strokeStyle="rgba(255,255,255,.5)";x.lineWidth=3;for(let i=0;i<=w;i+=32){x.beginPath();x.moveTo(i,0);x.lineTo(i,h);x.stroke()}for(let j=0;j<=h;j+=32){x.beginPath();x.moveTo(0,j);x.lineTo(w,j);x.stroke()}});
+const gaugeTex=cv(64,640,(x,w,h)=>{const bh=h/12;for(let b=0;b<12;b++){x.fillStyle=b%2===0?"#e6007e":"#ffe600";x.fillRect(0,b*bh,w,bh)}});
+const cardTexV=cv(64,640,(x,w,h)=>{x.fillStyle="#fff3b8";x.fillRect(0,0,w,h);x.fillStyle="#111";x.fillRect(0,0,w,10);x.fillRect(0,h-10,w,10);x.strokeStyle="#8a7a3c";x.lineWidth=3;x.strokeRect(1.5,1.5,w-3,h-3);x.font="bold 30px Arial";x.save();x.translate(42,h/2);x.rotate(-PI/2);x.textAlign="center";x.fillText("10 cm",0,0);x.restore()});
+const cardTexH=cv(640,64,(x,w,h)=>{x.fillStyle="#fff3b8";x.fillRect(0,0,w,h);x.fillStyle="#111";x.fillRect(0,0,10,h);x.fillRect(w-10,0,10,h);x.strokeStyle="#8a7a3c";x.lineWidth=3;x.strokeRect(1.5,1.5,w-3,h-3);x.font="bold 30px Arial";x.textAlign="center";x.fillText("10 cm",w/2,44)});
+const diskTex=cv(512,512,(x,w)=>{const s=w;x.fillStyle="#fbfaf5";x.beginPath();x.arc(s/2,s/2,s/2,0,7);x.fill();x.strokeStyle="#1d1d1d";x.lineWidth=16;x.beginPath();x.arc(s/2,s/2,s/2-8,0,7);x.stroke();
+  x.strokeStyle="#8e979f";x.lineWidth=3;x.setLineDash([12,10]);x.beginPath();x.moveTo(16,s/2);x.lineTo(s-16,s/2);x.moveTo(s/2,16);x.lineTo(s/2,s-16);x.stroke();x.setLineDash([]);
+  x.fillStyle="#111";x.beginPath();x.arc(s/2,s/2,9,0,7);x.fill();x.font="bold 44px Arial";x.fillText("O",s/2+14,s/2-14)});
+const rulerTex=cv(1240,120,(x,w,h)=>{x.fillStyle="#f4efe2";x.fillRect(0,0,w,h);x.strokeStyle="#333";x.fillStyle="#222";x.font="bold 26px Arial";x.textAlign="center";
+  for(let mm=0;mm<=300;mm++){const p=20+mm*4,L=mm%10===0?44:(mm%5===0?30:17);x.lineWidth=mm%10===0?2.4:1.3;x.beginPath();x.moveTo(p,0);x.lineTo(p,L);x.stroke();if(mm%10===0)x.fillText(String(mm/10),p,76)}
+  x.font="bold 20px Arial";x.textAlign="left";x.fillText("cm",w-60,108)});
+const ekeTex=cv(320,560,(x,w,h)=>{x.fillStyle="rgba(110,185,235,0.5)";x.beginPath();x.moveTo(0,0);x.lineTo(0,h);x.lineTo(w,h);x.closePath();x.fill();
+  x.globalCompositeOperation="destination-out";x.beginPath();x.moveTo(60,226);x.lineTo(60,500);x.lineTo(217,500);x.closePath();x.fill();x.globalCompositeOperation="source-over";
+  x.strokeStyle="rgba(15,70,110,0.95)";x.lineWidth=4;x.beginPath();x.moveTo(2,2);x.lineTo(2,h-2);x.lineTo(w-2,h-2);x.closePath();x.stroke();
+  x.lineWidth=3;x.beginPath();x.moveTo(60,226);x.lineTo(60,500);x.lineTo(217,500);x.closePath();x.stroke();
+  x.lineWidth=2;for(let i=0;i<=13;i++){x.beginPath();x.moveTo(0,h-i*40);x.lineTo(i%5===0?20:12,h-i*40);x.stroke()}for(let i=0;i<=7;i++){x.beginPath();x.moveTo(i*40,h);x.lineTo(i*40,h-(i%5===0?20:12));x.stroke()}
+  x.fillStyle="rgba(15,70,110,0.95)";x.fillRect(4,h-26,22,22)});
+const proTex=cv(240,480,(x,w,h)=>{const r=232,cy=240;x.fillStyle="rgba(255,236,170,0.55)";x.beginPath();x.moveTo(0,cy-r);x.arc(0,cy,r,-PI/2,PI/2);x.closePath();x.fill();
+  x.strokeStyle="#5c4a12";x.lineWidth=3;x.stroke();x.lineWidth=1.6;
+  for(let a=0;a<=180;a++){const L=a%10===0?26:(a%5===0?17:9),s=Math.sin(a*DEG),c=Math.cos(a*DEG);x.beginPath();x.moveTo(s*r,cy-c*r);x.lineTo(s*(r-L),cy-c*(r-L));x.stroke()}
+  x.fillStyle="#3d300a";x.font="bold 20px Arial";x.textAlign="center";for(let a=0;a<=180;a+=30){const s=Math.sin(a*DEG),c=Math.cos(a*DEG);x.fillText(String(a),s*186+8,cy-c*186+7)}
+  x.strokeStyle="#c8006e";x.lineWidth=4;x.beginPath();x.moveTo(0,cy);x.lineTo(Math.sin(ALPHA)*r,cy-Math.cos(ALPHA)*r);x.stroke();
+  x.fillStyle="#c8006e";x.font="bold 24px Arial";x.fillText("20°",Math.sin(ALPHA)*120+22,cy-Math.cos(ALPHA)*120);
+  x.fillStyle="#5c4a12";x.beginPath();x.arc(0,cy,6,0,7);x.fill()});
+const scisTex=cv(200,520,(x)=>{x.fillStyle="#c3cad1";x.strokeStyle="#6b737b";x.lineWidth=3;
+  [[1,-1],[-1,1]].forEach(([a])=>{x.save();x.translate(100,290);x.rotate(a*0.08);x.beginPath();x.moveTo(-9,0);x.lineTo(-3,-280);x.lineTo(9,-270);x.lineTo(9,0);x.closePath();x.fill();x.stroke();x.restore()});
+  x.fillStyle="#555";x.beginPath();x.arc(100,290,7,0,7);x.fill();
+  x.strokeStyle="#e53935";x.lineWidth=20;x.beginPath();x.arc(62,410,44,0,7);x.stroke();x.beginPath();x.arc(138,410,44,0,7);x.stroke();
+  x.lineWidth=16;x.beginPath();x.moveTo(92,300);x.lineTo(70,368);x.moveTo(108,300);x.lineTo(130,368);x.stroke()});
+const screenTex=cv(600,288,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"#16313f");g.addColorStop(1,"#0b1a22");x.fillStyle=g;x.fillRect(0,0,w,h);
+  x.fillStyle="#fff";x.font="bold 34px Arial";x.fillText("Trạm đo ngập",28,58);x.fillStyle="#9cc6e3";x.font="24px Arial";x.fillText("Chụp nhanh · thước đo ngập",28,96);
+  x.fillStyle="#1d8a55";x.beginPath();x.roundRect?x.roundRect(28,200,220,46,23):x.rect(28,200,220,46);x.fill();x.fillStyle="#fff";x.font="bold 24px Arial";x.fillText("Máy thẳng ✓",52,231);
+  x.strokeStyle="#fff";x.lineWidth=6;x.beginPath();x.arc(520,223,34,0,7);x.stroke()});
+const streamTex=cv(32,128,(x,w,h)=>{for(let i=0;i<h;i+=16){x.fillStyle="rgba(190,225,255,0.95)";x.fillRect(0,i,w,8);x.fillStyle="rgba(90,160,230,0.6)";x.fillRect(0,i+8,w,8)}});
+streamTex.wrapS=streamTex.wrapT=T.RepeatWrapping;
+
+// ---------- nhãn ----------
+const allLabels=[];let labelsOn=true;
+function label(text,pos,parent,opt){
+  opt=opt||{};const fs=opt.fs||32,pad=12,c=document.createElement("canvas"),x=c.getContext("2d");
+  const font=(opt.w||"700")+" "+fs+"px 'Be Vietnam Pro', Arial, sans-serif";x.font=font;
+  const circ=opt.circle,w=circ?Math.max(fs*1.55,Math.ceil(x.measureText(text).width)+fs*0.8):Math.ceil(x.measureText(text).width)+pad*2,h=circ?fs*1.55:fs+pad*1.2;
+  c.width=w;c.height=h;x.font=font;x.fillStyle=opt.bg||"rgba(255,255,255,.95)";
+  const r=circ?h/2:10;x.beginPath();x.moveTo(r,0);x.arcTo(w,0,w,h,r);x.arcTo(w,h,0,h,r);x.arcTo(0,h,0,0,r);x.arcTo(0,0,w,0,r);x.fill();
+  if(opt.stroke){x.strokeStyle=opt.stroke;x.lineWidth=3;x.stroke()}
+  x.fillStyle=opt.color||"#12303f";x.textAlign="center";x.textBaseline="middle";x.fillText(text,w/2,h/2+1);
+  const tx=new T.CanvasTexture(c);tx.minFilter=T.LinearFilter;
+  const s=new T.Sprite(new T.SpriteMaterial({map:tx,depthTest:false,sizeAttenuation:false}));const k=opt.k||0.00044;s.scale.set(w*k,h*k,1);s.renderOrder=40;
+  s.position.copy(pos);s.userData.kind=opt.kind||"part";s.userData.n=opt.n;(parent||scene).add(s);allLabels.push(s);return s;
+}
+
+// ---------- hệ thống "diễn viên": vị trí theo từng bước ----------
+const actors=[];let cur=0,stepStart=performance.now(),instant=true;
+function toQ(r){if(!r)return new T.Quaternion();if(r.isQuaternion)return r.clone();return new T.Quaternion().setFromEuler(new T.Euler(r[0]||0,r[1]||0,r[2]||0))}
+function actor(obj,o){o=o||{};
+  const a={obj,show:o.show||[0,99],delay:o.delay||0,explode:o.explode||null,anim:o.anim||null,ext:null};
+  a.poses=(o.poses||[[0,[obj.position.x,obj.position.y,obj.position.z],[obj.rotation.x,obj.rotation.y,obj.rotation.z]]]).map(p=>({k:p[0],p:V3(p[1][0],p[1][1],p[1][2]),q:toQ(p[2])}));
+  a.tgt=a.poses[0];a.cp=a.tgt.p.clone();a.cq=a.tgt.q.clone();a.from=null;a.tt=1;a.wait=0;a.arc=0;
+  a.s=1;a.sTarget=1;a.sFrom=1;a.sT=1;a.sWait=0;
+  if(o.item)obj.userData.item=o.item;
+  actors.push(a);return a;
+}
+function poseAt(a,k){let p=a.poses[0];for(const x of a.poses){if(x.k<=k)p=x}return p}
+function startTrans(a,p){a.from={p:a.cp.clone(),q:a.cq.clone()};a.tgt=p;a.tt=0;a.wait=a.delay;a.arc=Math.min(9,a.from.p.distanceTo(p.p)*0.3)}
+function retarget(){
+  actors.forEach(a=>{
+    const p=poseAt(a,cur);
+    if(instant){a.tgt=p;a.cp.copy(p.p);a.cq.copy(p.q);a.tt=1}
+    else if(p!==a.tgt||a.cp.distanceTo(p.p)>0.05||a.cq.angleTo(p.q)>0.02)startTrans(a,p);
+    const want=(cur>=a.show[0]&&cur<a.show[1])?1:0;
+    if(instant){a.s=a.sTarget=want;a.sT=1}
+    else if(want!==a.sTarget){a.sTarget=want;a.sFrom=a.s;a.sT=0;a.sWait=want?a.delay:0}
+  });
+}
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+const back=k=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2)};
+let explodeK=0,explodeTarget=0;
+function updActors(dt,st){
+  actors.forEach(a=>{
+    const an=a.anim&&a.anim[cur];let r=null;
+    if(an&&a.sTarget)r=an(st);else if(a.ext)r=a.ext;
+    if(r){const k=Math.min(1,dt*(a.ext?3.2:7));a.cp.lerp(V3(r.p[0],r.p[1],r.p[2]),k);a.cq.slerp(toQ(r.r),k);a.hadOv=true}
+    else{
+      if(a.hadOv){a.hadOv=false;startTrans(a,a.tgt)}
+      if(a.tt<1){if(a.wait>0)a.wait-=dt;else{a.tt=Math.min(1,a.tt+dt/(reduce?0.05:0.95));const e=ease(a.tt);a.cp.lerpVectors(a.from.p,a.tgt.p,e);a.cp.y+=a.arc*Math.sin(PI*e);a.cq.copy(a.from.q).slerp(a.tgt.q,e)}}
+      else{a.cp.copy(a.tgt.p);a.cq.copy(a.tgt.q)}
+    }
+    a.obj.position.copy(a.cp);if(a.explode&&explodeK>0.001)a.obj.position.addScaledVector(a.explode,explodeK);
+    a.obj.quaternion.copy(a.cq);
+    if(a.sT<1){if(a.sWait>0)a.sWait-=dt;else{a.sT=Math.min(1,a.sT+dt/(reduce?0.05:(a.sTarget?0.5:0.25)));a.s=a.sFrom+(a.sTarget-a.sFrom)*(a.sTarget?back(a.sT):a.sT)}}
+    a.obj.visible=a.s>0.003;a.obj.scale.setScalar(Math.max(0.0001,a.s));
+  });
+}
+
+// ---------- bàn, khăn ----------
+const table=mesh(new T.BoxGeometry(170,1.6,110),new T.MeshStandardMaterial({map:woodTex,roughness:.8}),0,Y0-0.8,16);table.castShadow=false;
+const towel=mesh(new T.BoxGeometry(52,0.1,26),new T.MeshStandardMaterial({map:towelTex,roughness:1}),0,Y0+0.05,0);towel.castShadow=false;towel.userData.item=2;
+const wipe=mesh(new T.BoxGeometry(11,0.9,8),M(0xe8a35a,{roughness:1}),-40,Y0+0.45,-16);wipe.userData.item=2;
+
+// ---------- 1. khay ----------
+const trayG=new T.Group();scene.add(trayG);trayG.userData.item=1;
+const clear=new T.MeshPhysicalMaterial({color:0xd9eaf3,transparent:true,opacity:.2,roughness:.05,metalness:0,side:T.DoubleSide,depthWrite:false});
+const trayBottom=mesh(new T.BoxGeometry(TW,TT,TD),clear.clone(),0,-TT/2,0,trayG);trayBottom.material.opacity=.32;trayBottom.castShadow=false;trayBottom.receiveShadow=false;
+[[TW,TH,TT,0,TH/2,TD/2],[TW,TH,TT,0,TH/2,-TD/2],[TT,TH,TD,TW/2,TH/2,0],[TT,TH,TD,-TW/2,TH/2,0]].forEach(a=>{const m=mesh(new T.BoxGeometry(a[0],a[1],a[2]),clear,a[3],a[4],a[5],trayG);m.castShadow=false;m.receiveShadow=false;m.renderOrder=3});
+const trayEdges=new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(TW,TH+TT,TD)),new T.LineBasicMaterial({color:0x7d97a8}));trayEdges.position.y=TH/2-TT/2;trayG.add(trayEdges);
+label("1 · Khay 40 × 15 × 16 cm",V3(-22,TH+3,0),trayG);
+// giấy đen
+const paper=mesh(new T.BoxGeometry(TW,0.1,TD),M(0x15171a,{roughness:.95}));paper.castShadow=false;
+actor(paper,{item:3,poses:[[0,[0,Y0+0.06,-22]],[2,[0,-0.5,0]]]});
+// vạch đường bằng băng keo giấy
+for(let i=-3;i<=3;i++){const m=mesh(new T.BoxGeometry(3,0.05,0.5),M(0xf4f1e6),i*5.5,0.03,4.5);m.castShadow=false;actor(m,{show:[3,99],delay:0.4+(i+3)*0.18,item:4})}
+// 3 vạch đỏ
+[PX,WX,CX].forEach((x,i)=>{const m=mesh(new T.BoxGeometry(0.28,1.5,0.06),M(0xd0021b),x,0.75,TD/2+TT/2+0.04);m.castShadow=false;actor(m,{show:[4,99],delay:0.9+i*1.0,item:5})});
+
+// ---------- dụng cụ ----------
+const REST={};
+// thước 30 cm
+const ruler=mesh(new T.BoxGeometry(31,3,0.2),[M(0xe9e2cf),M(0xe9e2cf),M(0xe9e2cf),M(0xe9e2cf),new T.MeshStandardMaterial({map:rulerTex,roughness:.5}),M(0xe9e2cf)]);
+REST.ruler=[[-5,Y0+0.1,25],[-PI/2,0,0]];
+actor(ruler,{item:6,poses:[[0,...REST.ruler],[4,[-5,3.3,7.9],0],[5,...REST.ruler],[6,[PX+2.7,Y0+15,13],[0,0,PI/2]],[7,[PX+4.6,Y0+15,13],[0,0,PI/2]],[8,...REST.ruler],
+  [14,[22,Y0+0.45,18.5],[-PI/2,0,PI]],[15,...REST.ruler],[16,[22,Y0+0.45,18.5],[-PI/2,0,PI]],[17,...REST.ruler],[21,[CX-2.7,Y0+15,13],[0,0,PI/2]],[23,...REST.ruler],[26,[CX+15,25.2,1.4],0],[27,...REST.ruler]]});
+// ê ke
+const ekeGeo=new T.PlaneGeometry(8,14);ekeGeo.translate(4,7,0);
+const eke=new T.Mesh(ekeGeo,new T.MeshBasicMaterial({map:ekeTex,transparent:true,side:T.DoubleSide,depthWrite:false}));eke.renderOrder=6;scene.add(eke);
+REST.eke=[[-36,Y0+0.04,30],[-PI/2,0,0]];
+actor(eke,{item:7,poses:[[0,...REST.eke],[5,[WX,Y0,7.95],0],[6,...REST.eke],[12,[PX+0.75,0,0],0],[13,...REST.eke],[25,[CX,0,1.0],[0,PI,0]],[26,...REST.eke]],
+  anim:{12:st=>{const ph=Math.floor(Math.max(0,st-0.8)/2.2)%2;return ph===0?{p:[PX+0.75,0,0],r:[0,0,0]}:{p:[PX,0,0.75],r:[0,-PI/2,0]}}}});
+// thước đo độ
+const proGeo=new T.PlaneGeometry(6,12);proGeo.translate(3,0,0);
+const pro=new T.Mesh(proGeo,new T.MeshBasicMaterial({map:proTex,transparent:true,side:T.DoubleSide,depthWrite:false}));pro.renderOrder=6;scene.add(pro);
+actor(pro,{item:20,poses:[[0,[28,Y0+0.04,38],[-PI/2,0,0]],[25,[CX,0.05,1.15],0],[26,[28,Y0+0.04,38],[-PI/2,0,0]]]});
+// kéo
+const scis=new T.Mesh(new T.PlaneGeometry(5,13),new T.MeshBasicMaterial({map:scisTex,transparent:true,side:T.DoubleSide,depthWrite:false}));scene.add(scis);
+REST.scis=[[-20,Y0+0.05,32],[-PI/2,0,PI/2]];
+actor(scis,{item:9,poses:[[0,...REST.scis],[7,[PX+9,Y0+0.05,18],[-PI/2,0,PI/3]],[8,...REST.scis],[15,[40,Y0+0.05,30],[-PI/2,0,PI/3]],[16,...REST.scis]]});
+// bút lông đỏ (gốc toạ độ ở đầu bút)
+const marker=new T.Group();scene.add(marker);
+mesh(new T.CylinderGeometry(0.55,0.55,9.5,16),M(0xd32f2f),0,5.75,0,marker);mesh(new T.CylinderGeometry(0.22,0.5,1,12),M(0x7a1414),0,0.5,0,marker);mesh(new T.CylinderGeometry(0.62,0.62,1,16),M(0x9c1b1b),0,10.6,0,marker);
+REST.marker=[[-12,Y0+0.55,30],[0,0,-PI/2]];
+actor(marker,{item:5,poses:[[0,...REST.marker],[4,[PX+0.3,0.9,8.4],[0.35,0,-0.25]],[5,...REST.marker]],
+  anim:{4:st=>{const i=Math.min(2,Math.floor(Math.max(0,st-0.9)));const x=[PX,WX,CX][i];return {p:[x+0.3,0.9+0.25*Math.sin(st*16),8.4],r:[0.35,0,-0.25]}}}});
+// bút chì và bút lông đen
+const pens=new T.Group();scene.add(pens);
+mesh(new T.CylinderGeometry(0.5,0.5,10,14),M(0x222428),0,5.5,0,pens);mesh(new T.CylinderGeometry(0.15,0.45,1,12),M(0x111111),0,0.5,0,pens);
+mesh(new T.CylinderGeometry(0.36,0.36,11,6),M(0xf2c14e),1.4,6.5,0,pens);mesh(new T.CylinderGeometry(0.05,0.36,1,12),M(0xe2c49a),1.4,0.5,0,pens);
+REST.pens=[[13,Y0+0.5,35.5],[-PI/2,0,-PI/2]];
+actor(pens,{item:16,poses:[[0,...REST.pens],[14,[31,Y0+0.3,21.5],[0.3,0,-0.3]],[16,...REST.pens]],
+  anim:{14:st=>{const p=clamp((st-0.8)/2.2,0,1);const a=p<0.5?p*2:(p-0.5)*2;return p<0.5?{p:[23+14*a-1.4,Y0+0.3,20],r:[0.3,0,-0.3]}:{p:[30-1.4,Y0+0.3,13+14*a],r:[0.3,0,-0.3]}},
+        15:st=>{const a=clamp((st-0.8)/2.6,0,1)*2*PI;return {p:[30+7*Math.cos(a),Y0+0.32,20-7*Math.sin(a)],r:[0.3,0,-0.3]}}}});
+// băng keo giấy, băng keo trong
+const tape1=mesh(new T.TorusGeometry(3,1.1,12,32),M(0xeee2bf));
+actor(tape1,{item:4,poses:[[0,[-32,Y0+1.1,-2],[PI/2,0,0]],[3,[17,Y0+1.1,13],[PI/2,0,0]],[4,[-32,Y0+1.1,-2],[PI/2,0,0]]]});
+const tape2=mesh(new T.TorusGeometry(3,1.1,12,32),new T.MeshPhysicalMaterial({color:0xcfe8f5,transparent:true,opacity:.75,roughness:.15}));
+actor(tape2,{item:11,poses:[[0,[-32,Y0+1.1,7],[PI/2,0,0]],[8,[PX+7,Y0+1.1,17],[PI/2,0,0]],[10,[-32,Y0+1.1,7],[PI/2,0,0]],[17,[40,Y0+1.1,29],[PI/2,0,0]],[18,[-32,Y0+1.1,7],[PI/2,0,0]]]});
+// compa (gốc ở mũi kim)
+const compa=new T.Group();scene.add(compa);
+const metal=M(0x9aa4ae,{metalness:.7,roughness:.3});const hinge=V3(3.5,10.4,0);
+cyl(V3(0,0,0),hinge,0.2,metal,compa);cyl(V3(7,0,0),hinge,0.2,metal,compa);mesh(new T.CylinderGeometry(0.4,0.4,1.8,12),M(0x1f4e79),3.5,11.5,0,compa);mesh(new T.SphereGeometry(0.55,12,8),M(0x1f4e79),3.5,10.4,0,compa);
+REST.compa=[[4,Y0+0.25,40],[-PI/2,0,0]];
+actor(compa,{item:15,poses:[[0,...REST.compa],[13,[30,Y0+0.3,20],0],[14,...REST.compa]],anim:{13:st=>({p:[30,Y0+0.3,20],r:[0,clamp((st-1)/3,0,1)*2*PI,0]})}});
+
+// ---------- vật liệu nằm trên bàn lúc đầu ----------
+const gaugeMat=new T.MeshStandardMaterial({map:gaugeTex,roughness:.5,side:T.DoubleSide});
+const cardMatV=new T.MeshStandardMaterial({map:cardTexV,roughness:.6,side:T.DoubleSide});
+const cardMatH=new T.MeshStandardMaterial({map:cardTexH,roughness:.6,side:T.DoubleSide});
+const stripT=mesh(new T.PlaneGeometry(1.2,12),gaugeMat);stripT.castShadow=false;actor(stripT,{item:10,show:[0,7],poses:[[0,[12,Y0+0.03,14],[-PI/2,0,PI/2]]]});
+const cardT1=mesh(new T.PlaneGeometry(1,10),cardMatV);cardT1.castShadow=false;actor(cardT1,{item:12,show:[0,9],poses:[[0,[12,Y0+0.03,17],[-PI/2,0,PI/2]]]});
+const cardT2=mesh(new T.PlaneGeometry(1,10),cardMatV);cardT2.castShadow=false;actor(cardT2,{item:12,show:[0,27],poses:[[0,[12,Y0+0.03,19],[-PI/2,0,PI/2]]]});
+const stickT=mesh(new T.BoxGeometry(1,12,0.25),M(0xe8cf9a));actor(stickT,{item:17,show:[0,18],poses:[[0,[46,Y0+0.13,12],[-PI/2,0,PI/2]]]});
+
+// ---------- 2. cột mốc thẳng ----------
+const postG=new T.Group();scene.add(postG);
+mesh(new T.BoxGeometry(1.5,25,1.5),M(0xc9a26b),0,12.5,0,postG);
+const strip=mesh(new T.PlaneGeometry(1.2,12),gaugeMat,0,0,0,postG);strip.castShadow=false;
+actor(strip,{item:10,show:[7,99],poses:[[7,[2.6,6,0],0],[8,[0,6,0.77],0]]});
+const card1=mesh(new T.PlaneGeometry(1,10),cardMatV,0,18,0.78,postG);card1.castShadow=false;actor(card1,{item:12,show:[9,99]});
+label("2 · Cột thẳng H = 25 cm",V3(-1,27.6,0),postG);
+actor(postG,{item:8,poses:[[0,[-22.5,Y0+0.75,15],[0,0,-PI/2]],[6,[PX,Y0,13],0],[11,[PX,0,0],0]],explode:V3(-12,12,0)});
+// đất nặn
+const clayMat=M(0x6fae5a,{roughness:.95});
+function clay(p0,k,place){const g=new T.Group();scene.add(g);const ball=mesh(new T.SphereGeometry(2.06,24,16),clayMat,0,0,0,g);
+  if(k==null){actor(g,{item:13,poses:[[0,p0]]});return}
+  const dome=mesh(new T.SphereGeometry(2.6,24,14,0,2*PI,0,PI/2),clayMat,0,0,0,g);
+  actor(ball,{show:[0,k]});actor(dome,{show:[k,99]});actor(g,{item:13,poses:[[0,p0],[k,place]]});}
+clay([-44,Y0+2.06,-4],10,[PX,0,-0.6]);clay([-44,Y0+2.06,2],23,[CX,0,-0.6]);clay([-44,Y0+2.06,8]);
+
+// ---------- 3. bánh xe ----------
+const board=mesh(new T.BoxGeometry(17,0.3,17),M(0xd8bd8c,{roughness:.9}));
+actor(board,{item:14,show:[0,15],poses:[[0,[30,Y0+0.15,20]]]});
+const ringGeo=new T.RingGeometry(6.92,7.08,96,1);
+const ring=mesh(ringGeo,new T.MeshBasicMaterial({color:0x444444,side:T.DoubleSide}),0,0.165,0,board);ring.rotation.x=-PI/2;ring.castShadow=false;actor(ring,{show:[13,15]});
+const dOH=mesh(new T.CylinderGeometry(0.28,0.28,0.04,16),M(0x111111),0,0.17,0,board);actor(dOH,{show:[13,15]});
+[[14,0.03,0.09],[0.09,0.03,14]].forEach(s=>{const m=mesh(new T.BoxGeometry(s[0],s[1],s[2]),M(0x7a7a7a),0,0.17,0,board);m.castShadow=false;actor(m,{show:[14,15],delay:s[0]>1?0.8:2.0})});
+const wheelG=new T.Group();scene.add(wheelG);
+const disk=mesh(new T.CylinderGeometry(R,R,0.3,72),[M(0x1c1c1c),new T.MeshStandardMaterial({map:diskTex,roughness:.55}),new T.MeshStandardMaterial({map:diskTex,roughness:.55})],0,0,0,wheelG);disk.rotation.x=PI/2;
+const film=mesh(new T.CylinderGeometry(R+0.12,R+0.12,0.42,72),new T.MeshPhysicalMaterial({color:0xe8f6ff,transparent:true,opacity:.16,roughness:.05,clearcoat:1,depthWrite:false}),0,0,0,wheelG);film.rotation.x=PI/2;film.castShadow=false;actor(film,{show:[17,99]});
+const stick=mesh(new T.BoxGeometry(1,12,0.25),M(0xe8cf9a),0,6,-0.3,wheelG);actor(stick,{item:17,show:[18,99]});
+const card2=mesh(new T.PlaneGeometry(10,1),cardMatH,0,5,0.26,wheelG);card2.castShadow=false;actor(card2,{item:12,show:[27,99]});
+label("3 · Bánh xe R = 7 cm",V3(4,TH+3.6-R,0),wheelG);
+actor(wheelG,{item:14,show:[15,99],poses:[[15,[30,Y0+0.15,20],[-PI/2,0,0]],[18,[WX,Y0+R,14],0],[19,[WX,R+1.5,0],0],[20,[WX,R,0],0]],explode:V3(0,17,0)});
+const bar=mesh(new T.BoxGeometry(1.6,1.2,19),M(0x8a6a44));
+actor(bar,{item:18,poses:[[0,[46,Y0+0.6,24]],[19,[WX,TH+0.6,0]]],explode:V3(0,17,0)});
+const clip=new T.Group();scene.add(clip);mesh(new T.BoxGeometry(2.2,1.8,1.4),M(0x161616,{roughness:.4}),0,0,0,clip);
+[-0.6,0.6].forEach(dx=>{const h=mesh(new T.TorusGeometry(0.8,0.12,6,16,PI),M(0xb8bfc6,{metalness:.6,roughness:.3}),dx,1.1,0,clip)});
+actor(clip,{item:19,poses:[[0,[46,Y0+0.9,4]],[19,[WX,TH-0.4,-0.3]]],explode:V3(0,17,0)});
+
+// ---------- 4. cột nghiêng ----------
+const tiltG=new T.Group();scene.add(tiltG);
+mesh(new T.BoxGeometry(1.2,25,1.2),M(0x4f8cc9),0,12.5,0,tiltG);
+for(let k=1;k<=15;k++){const m=mesh(new T.BoxGeometry(k%5===0?1.24:0.7,0.1,0.05),M(0x0c2333),k%5===0?0:-0.27,k,0.62,tiltG);m.castShadow=false;actor(m,{show:[22,99],delay:0.6+(k-1)*0.16})}
+label("4 · Cột nghiêng α = 20°",V3(0,27.6,0),tiltG);
+actor(tiltG,{item:8,poses:[[0,[-22.5,Y0+0.6,18.5],[0,0,-PI/2]],[21,[CX,Y0,13],0],[24,[CX,0,0],[0,0,-12*DEG]],[25,[CX,0,0],[0,0,-ALPHA]]],explode:V3(12,12,0),
+  anim:{25:st=>({p:[CX,0,0],r:[0,0,-(12+8*clamp((st-1.2)/1.6,0,1))*DEG]})}});
+
+// ---------- 5. sách, hộp, điện thoại ----------
+const BOOKS=[[26,2.2,19,0xb74a3a],[25,2.3,18,0x2f6c9e],[27,2.1,19,0x4c8a4a]];let hy=0;
+BOOKS.forEach((b,i)=>{const cov=M(b[3],{roughness:.8}),pg=M(0xf3efe4,{roughness:.9});const m=mesh(new T.BoxGeometry(b[0],b[1],b[2]),[pg,cov,cov,cov,pg,pg]);const y=Y0+hy+b[1]/2;hy+=b[1];
+  actor(m,{item:21,delay:i*0.25,poses:[[0,[-34,y,50]],[28,[PHX,y,PZ+5]]],explode:V3(0,0,16)})});
+const BTOP=Y0+hy;
+const pbox=mesh(new T.BoxGeometry(12,6,3),M(0x7a6a58));actor(pbox,{item:21,poses:[[0,[10,Y0+3,58]],[29,[PHX,BTOP+3,PZ+2.4]]],explode:V3(0,0,16)});
+const phone=new T.Group();scene.add(phone);
+mesh(new T.BoxGeometry(15,7.2,0.8),M(0x16191d,{roughness:.35}),0,0,0,phone);
+const scr=mesh(new T.PlaneGeometry(14.2,6.6),new T.MeshBasicMaterial({map:screenTex}),0,0,0.41,phone);scr.castShadow=false;
+const lens=mesh(new T.CylinderGeometry(0.55,0.55,0.2,20),M(0x2b323a,{metalness:.6,roughness:.2}),-6,-2.4,-0.46,phone);lens.rotation.x=PI/2;
+mesh(new T.TorusGeometry(0.65,0.12,8,20),M(0x9aa4ae,{metalness:.8,roughness:.2}),-6,-2.4,-0.47,phone);
+label("5 · Điện thoại cách khay 40 cm",V3(0,6.6,0),phone);
+actor(phone,{item:22,poses:[[0,[-8,Y0+0.4,50],[-PI/2,0,0]],[29,[PHX,BTOP+3.6,PZ],0]],explode:V3(0,0,16)});
+const LENS=V3(PHX-6,BTOP+3.6-2.4,PZ-0.46);
+
+// ---------- chai nước ----------
+function bottle(){const g=new T.Group();scene.add(g);
+  const prof=[[0,0],[4,0],[4.4,0.8],[4.4,19],[4.1,22],[2.4,26.5],[1.5,28],[1.5,30.5],[0.01,30.5]].map(p=>new T.Vector2(p[0],p[1]));
+  const sh=mesh(new T.LatheGeometry(prof,32),new T.MeshPhysicalMaterial({color:0xd5ecfa,transparent:true,opacity:.35,roughness:.06,side:T.DoubleSide,depthWrite:false}),0,0,0,g);sh.castShadow=false;
+  const wp=[[0.01,0.5],[4.15,0.5],[4.15,17],[0.01,17]].map(p=>new T.Vector2(p[0],p[1]));
+  const w=mesh(new T.LatheGeometry(wp,32),new T.MeshPhysicalMaterial({color:0x2b7fd0,transparent:true,opacity:.62,roughness:.1}),0,0,0,g);
+  mesh(new T.CylinderGeometry(1.65,1.65,1.4,20),M(0x1e88e5),0,31.2,0,g);
+  return {g,w};}
+const BOT=[[34,-20],[43,-20],[34,-29],[43,-29]].map(([x,z])=>{const b=bottle();b.a=actor(b.g,{item:23,poses:[[0,[x,Y0,z]]]});return b});
+
+// ---------- nước, mặt nước gợn sóng ----------
+const WW=TW-TT*2-0.04,WD=TD-TT*2-0.04;
+const waterBody=new T.Mesh(new T.BoxGeometry(WW,1,WD),new T.MeshPhysicalMaterial({color:0x2f86d6,transparent:true,opacity:.3,roughness:.1,depthWrite:false}));waterBody.renderOrder=2;scene.add(waterBody);
+const surfGeo=new T.PlaneGeometry(WW,WD,48,18);surfGeo.rotateX(-PI/2);
+const surfBase=surfGeo.attributes.position.array.slice();
+const surf=new T.Mesh(surfGeo,new T.MeshPhysicalMaterial({color:0x3f97e0,transparent:true,opacity:.55,roughness:.12,metalness:.1,side:T.DoubleSide,depthWrite:false}));surf.renderOrder=4;scene.add(surf);
+const ripples=[];
+function ripple(x,z,a){ripples.push({x,z,t:0,a:a||0.16});if(ripples.length>16)ripples.shift()}
+const stream=new T.Mesh(new T.CylinderGeometry(0.42,0.42,1,12,1,true),new T.MeshBasicMaterial({map:streamTex,transparent:true,opacity:.8,color:0x8cc8f5,depthWrite:false}));stream.visible=false;scene.add(stream);
+const POUR={x:-6,z:-4.5,y:19};
+// dây cung và đoạn OH
+const redMat=new T.MeshBasicMaterial({color:0xe5221f,depthTest:false}),ohMat=new T.MeshBasicMaterial({color:0xff9a1f,depthTest:false});
+const chord=new T.Mesh(new T.BoxGeometry(1,0.2,0.1),redMat);chord.renderOrder=9;scene.add(chord);
+const ohL=new T.Mesh(new T.BoxGeometry(0.16,1,0.1),ohMat);ohL.renderOrder=9;scene.add(ohL);
+const pA=new T.Mesh(new T.SphereGeometry(0.32,12,8),redMat),pB=pA.clone(),pH=new T.Mesh(new T.SphereGeometry(0.28,12,8),ohMat);
+[pA,pB,pH].forEach(p=>{p.renderOrder=10;scene.add(p)});
+const lA=label("A",V3(0,0,0),scene,{fs:30,k:0.00042,kind:"pt"}),lB=label("B",V3(0,0,0),scene,{fs:30,k:0.00042,kind:"pt"}),lH=label("H",V3(0,0,0),scene,{fs:30,k:0.00042,kind:"pt"});
+
+// ---------- kích thước, mũi tên chỉ ----------
+const dimObjs={};
+function makeDim(key,a,b,text,off,dash){
+  const g=dimObjs[key]||(dimObjs[key]=new T.Group());if(!g.parent)scene.add(g);g.visible=false;
+  const A=V3(...a),B=V3(...b),d=B.clone().sub(A),vert=Math.abs(d.y)>Math.max(Math.abs(d.x),Math.abs(d.z));
+  const tk=vert?V3(0.7,0,0):V3(0,0.7,0);
+  const pts=dash?[A,B]:[A,B,A.clone().add(tk),A.clone().sub(tk),B.clone().add(tk),B.clone().sub(tk)];
+  const mat=dash?new T.LineDashedMaterial({color:0xc8006e,dashSize:0.7,gapSize:0.45,depthTest:false}):new T.LineBasicMaterial({color:0xc8006e,depthTest:false});
+  const ln=new T.LineSegments(new T.BufferGeometry().setFromPoints(pts),mat);if(dash)ln.computeLineDistances();ln.renderOrder=30;g.add(ln);
+  if(text){const m=A.clone().add(B).multiplyScalar(0.5).add(off?V3(...off):(vert?V3(-2.6,0,0):V3(0,1.2,0)));label(text,m,g,{fs:28,color:"#c8006e",kind:"dim"})}
+}
+makeDim("red",[-20,6.6,8.3],[PX,6.6,8.3],"8 cm");makeDim("red",[-20,8.4,8.3],[WX,8.4,8.3],"21 cm");makeDim("red",[-20,10.2,8.3],[CX,10.2,8.3],"32 cm");
+makeDim("h16",[21.3,0,8],[21.3,16,8],"16 cm",[2.6,0,0]);
+makeDim("p25",[PX-1.7,Y0,13],[PX-1.7,Y0+25,13],"25 cm");
+makeDim("s12",[PX+6.6,Y0,13],[PX+6.6,Y0+12,13],"12 cm",[2.6,0,0]);
+makeDim("c13",[PX-1.7,Y0,13.8],[PX-1.7,Y0+13,13.8],"13 cm");makeDim("c13",[PX-1.7,Y0+13,13.8],[PX-1.7,Y0+23,13.8],"10 cm",[-2.6,0,0]);
+makeDim("d14",[23,Y0+0.9,21.4],[37,Y0+0.9,21.4],"14 cm",[0,1.3,0]);
+makeDim("o7",[WX-8.6,0,0.6],[WX-8.6,R,0.6],"7 cm");
+makeDim("t25",[CX+1.7,Y0,13],[CX+1.7,Y0+25,13],"25 cm",[2.6,0,0]);
+makeDim("c12",[WX+8.6,0,0.6],[WX+8.6,12,0.6],"12 cm",[2.6,0,0]);
+makeDim("t86",[CX,22.2,1.4],[CX+25*Math.sin(ALPHA),22.2,1.4],"≈ 8,6 cm",[0,-1.3,0]);makeDim("t86",[CX,0,1.4],[CX,25.5,1.4],"",null,true);
+makeDim("p40",[PHX-9.5,Y0+0.3,TD/2+0.2],[PHX-9.5,Y0+0.3,PZ],"40 cm",[-1.6,1.2,0]);
+makeDim("l7",[PHX-9.5,0,PZ-1],[PHX-9.5,LENS.y,PZ-1],"≈ 7 cm");makeDim("l7",[PHX-9.5,0,PZ-1],[PHX-5,0,PZ-1],"",null,true);
+(function(){const g=dimObjs.a20=new T.Group();scene.add(g);g.visible=false;
+  const arc=new T.Mesh(new T.RingGeometry(4.4,4.7,32,1,PI/2-ALPHA,ALPHA),new T.MeshBasicMaterial({color:0xc8006e,side:T.DoubleSide,depthTest:false}));arc.position.set(CX,0,1.5);arc.renderOrder=30;g.add(arc);
+  label("α = 20°",V3(CX+3.4,6.6,1.5),g,{fs:28,color:"#c8006e",kind:"dim"})})();
+// mũi tên nhảy chỉ chỗ cần làm
+const arrow=new T.Group();scene.add(arrow);
+const am=new T.MeshStandardMaterial({color:0xe6007e,emissive:0x6a0034,roughness:.4});
+const cone=new T.Mesh(new T.ConeGeometry(0.9,2.2,20),am);cone.rotation.x=PI;cone.position.y=1.1;arrow.add(cone);
+const shaft=new T.Mesh(new T.CylinderGeometry(0.3,0.3,1.8,12),am);shaft.position.y=3.1;arrow.add(shaft);arrow.visible=false;
+// số thứ tự vật liệu ở bước chuẩn bị
+ITEMS.forEach(it=>label(String(it.n),V3(...it.b),scene,{fs:30,circle:true,bg:"#1f78b4",color:"#ffffff",k:0.0004,kind:"badge",n:it.n}));
+
+// ---------- mưa ----------
+const RN=420,rainPos=new Float32Array(RN*6),rv=new Float32Array(RN);
+const rainGeo=new T.BufferGeometry();rainGeo.setAttribute("position",new T.BufferAttribute(rainPos,3));
+const rainLines=new T.LineSegments(rainGeo,new T.LineBasicMaterial({color:0xa9d2ee,transparent:true,opacity:.75}));rainLines.visible=false;rainLines.frustumCulled=false;scene.add(rainLines);
+function seedDrop(i,top){const x=(Math.random()*2-1)*30,z=(Math.random()*2-1)*15,y=top?44+Math.random()*8:Math.random()*50;rainPos.set([x,y,z,x,y+1.4,z],i*6);rv[i]=36+Math.random()*14}
+for(let i=0;i<RN;i++)seedDrop(i,false);
+
+// ================= GÓC NHÌN =================
+const VIEWS={
+  table:{p:[0,112,100],t:[0,0,14],fov:40},tray:{p:[32,40,62],t:[0,3,0]},front:{p:[0,15,70],t:[0,6,0]},
+  work:{p:[PX+24,22,54],t:[PX+1,Y0+12,12]},postIn:{p:[PX+18,24,42],t:[PX,9,0]},draw:{p:[30,36,42],t:[30,0,20]},
+  wheelOut:{p:[WX+16,15,46],t:[WX,Y0+8,12]},wheelIn:{p:[WX+12,16,44],t:[WX,9,0]},workR:{p:[CX+24,22,54],t:[CX-1,Y0+12,12]},
+  tiltIn:{p:[CX+18,24,42],t:[CX+3,10,0]},tiltFoot:{p:[CX+7,8,26],t:[CX+2,3.5,0]},tiltCheck:{p:[CX+8,21,44],t:[CX+4,17,0]},
+  side:{p:[PHX+34,36,98],t:[PHX-6,3,26]},all:{p:[44,60,120],t:[0,5,22]},top:{p:[0,118,26],t:[0,0,22]},exp:{p:[46,80,140],t:[0,12,20]},
+  lens:{p:[LENS.x,LENS.y,LENS.z-1.2],t:[LENS.x,LENS.y,0],fov:46}
+};
+let fly=null,mode="table";
+function setView(name,custom){
+  const v=custom||VIEWS[name];if(!v)return;mode=name;
+  document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===name?"true":"false"));
+  stage.classList.toggle("lens",name==="lens");
+  if(name==="lens"&&controls.autoRotate)toggleSpin(false);
+  fly={t0:performance.now(),dur:reduce?1:1000,p0:camera.position.clone(),q0:controls.target.clone(),p1:V3(...v.p),q1:V3(...v.t),f0:camera.fov,f1:v.fov||36};
+}
+controls.addEventListener("start",()=>{fly=null;if(mode==="lens"){mode="free";stage.classList.remove("lens");document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed","false"))}});
+function toggleSpin(on){controls.autoRotate=on;$("spinBtn").setAttribute("aria-pressed",on?"true":"false")}
+$("spinBtn").onclick=()=>{const on=!controls.autoRotate;if(on&&mode==="lens")setView(cur===LAST?"all":(STEPS[cur].cam==="lens"?"side":STEPS[cur].cam));toggleSpin(on)};
+document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{
+  const v=b.dataset.view;stopAuto();
+  if(v==="lens"&&cur<29)goStep(LAST,{noCam:true});
+  setView(v==="all"&&cur===0?"table":v);
+});
+$("explode").onclick=()=>{stopAuto();if(cur!==LAST)goStep(LAST,{noCam:true});explodeTarget=explodeTarget?0:1;$("explode").setAttribute("aria-pressed",explodeTarget?"true":"false");setView(explodeTarget?"exp":"all")};
+$("labelsBtn").onclick=()=>{labelsOn=!labelsOn;$("labelsBtn").setAttribute("aria-pressed",labelsOn?"true":"false")};
+
+// ================= BƯỚC LẮP =================
+const gch=$("gchips");
+GROUPS.forEach((G,g)=>{const b=document.createElement("button");b.type="button";b.textContent=G.short;b.onclick=()=>{stopAuto();goStep(STEPS.findIndex(s=>s.g===g))};gch.appendChild(b)});
+let focusItem=null,flashed=false;
+function renderStepUI(){
+  const s=STEPS[cur],G=GROUPS[s.g];
+  const ks=STEPS.map((x,k)=>x.g===s.g?k:-1).filter(k=>k>=0),idx=ks.indexOf(cur)+1;
+  [...gch.children].forEach((b,g)=>{b.setAttribute("aria-current",g===s.g?"true":"false");b.classList.toggle("done",g<s.g)});
+  const cb=gch.children[s.g];if(cb&&cb.scrollIntoView&&gch.scrollWidth>gch.clientWidth)gch.scrollLeft=cb.offsetLeft-gch.offsetLeft-20;
+  $("progFill").style.width=(cur/LAST*100)+"%";
+  $("sKicker").textContent=s.g===0?"Chuẩn bị · 23 món":(s.g===6?"Hoàn thành":"Bộ phận "+s.g+"/5 · bước "+idx+"/"+ks.length);
+  $("sTitle").textContent=G.name;
+  $("sText").textContent=s.t;
+  $("sUses").innerHTML=s.g===0?'<a href="#chuan-bi" class="mini" style="text-decoration:none">Xem danh sách đầy đủ</a>':s.use.map(n=>'<span><span class="num">'+n+'</span>'+esc(itemName(n))+'</span>').join("");
+  const ck=$("sChk");if(s.chk){ck.hidden=false;ck.innerHTML="<b>Kiểm tra:</b> "+esc(G.chk)}else ck.hidden=true;
+  $("prev").disabled=cur<=0;$("next").disabled=cur>=LAST;
+  $("stepTag").innerHTML=s.g===0?"<b>Chuẩn bị</b> · chạm vào một món để xem tên":(s.g===6?"<b>Lắp xong</b> · rót nước để đo":"<b>Bộ phận "+s.g+"</b> · bước "+idx+"/"+ks.length+" · "+esc(G.name));
+  $("wHint").hidden=cur===LAST;
+}
+function goStep(k,opt){
+  k=clamp(k,0,LAST);cur=k;stepStart=performance.now();instant=false;flashed=false;focusItem=null;hidePick();
+  if(k!==LAST){if(explodeTarget){explodeTarget=0;$("explode").setAttribute("aria-pressed","false")}pour=null;BOT[0].a.ext=null;if(raining)setRain(false)}
+  retarget();
+  if(!(opt&&opt.noCam))setView(STEPS[k].cam||"all");
+  $("toast").classList.remove("on");
+  renderStepUI();
+}
+$("prev").onclick=()=>{stopAuto();goStep(cur-1)};
+$("next").onclick=()=>{stopAuto();goStep(cur+1)};
+let autoT=null;
+function stepDur(k){return reduce?1600:(STEPS[k].dur||3.1)*1000}
+function autoNext(){if(cur>=LAST){stopAuto();return}goStep(cur+1);autoT=setTimeout(autoNext,stepDur(cur))}
+function stopAuto(){if(autoT){clearTimeout(autoT);autoT=null}$("auto").textContent="Lắp tự động"}
+$("auto").onclick=()=>{if(autoT){stopAuto();return}if(cur>=LAST)goStep(0);$("auto").textContent="Dừng";autoT=setTimeout(autoNext,stepDur(cur))};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-k],[data-see],[data-pour]");if(!b)return;
+  if(b.dataset.k!=null){stopAuto();goStep(Number(b.dataset.k));stage.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"})}
+  else if(b.dataset.see!=null){stopAuto();const n=Number(b.dataset.see),it=ITEMS[n-1];goStep(0,{noCam:true});focusItem=n;
+    setView("free",{p:[it.b[0]+6,it.b[1]+30,it.b[2]+34],t:it.b,fov:36});showPick(n);stage.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"})}
+  else if(b.dataset.pour!=null){stopAuto();startPour(Number(b.dataset.pour));if(!b.closest(".panel"))stage.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"})}
+});
+
+// ---------- chạm để xem tên ----------
+const ray=new T.Raycaster(),mouse=new T.Vector2();let downXY=null;
+function shown(o){while(o){if(!o.visible)return false;o=o.parent}return true}
+function showPick(n){const it=ITEMS[n-1];$("pickBody").innerHTML='<b><span class="num">'+n+'</span> '+esc(it.name)+'</b>'+esc(it.qty)+" · "+esc(it.note)+"<br><span style=\"color:var(--water)\">Dùng ở: "+esc(it.use)+"</span>";$("pick").hidden=false}
+function hidePick(){$("pick").hidden=true}
+$("pickX").onclick=()=>{hidePick();focusItem=null};
+renderer.domElement.addEventListener("pointerdown",e=>{downXY=[e.clientX,e.clientY]});
+renderer.domElement.addEventListener("pointerup",e=>{
+  if(!downXY||Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>6)return;
+  const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mouse,camera);
+  const hits=ray.intersectObjects(scene.children,true);let first=null;
+  for(const h of hits){const o0=h.object;if(o0.isSprite||o0.isLine||o0.isLineSegments||!shown(o0))continue;let o=o0;while(o&&!o.userData.item)o=o.parent;
+    if(o){if(!first)first=o.userData.item;else if(first===1&&o.userData.item!==1){first=o.userData.item;break}if(first!==1)break}
+    if(o0===table)break}
+  if(first){showPick(first);if(cur===0)focusItem=first}else{hidePick();focusItem=null}
+});
+
+// ================= NƯỚC =================
+let d=0,lastDom=-1,pour=null;
+function setRain(on){raining=on;$("rainBtn").setAttribute("aria-pressed",on?"true":"false");rainLines.visible=on;hemi.intensity=on?0.55:0.72;applySky()}
+$("rainBtn").onclick=()=>{stopAuto();if(cur!==LAST)goStep(LAST);if(!raining&&d>=11.9){d=0}setRain(!raining)};
+function startPour(target){
+  if(cur!==LAST)goStep(LAST);
+  target=clamp(target,0,12);if(raining)setRain(false);
+  if(target<d-0.01){pour={drain:true,target};BOT[0].a.ext=null;return}
+  if(target<=d+0.01)return;
+  const tilt=2.0,mx=-30.5*Math.sin(tilt),my=30.5*Math.cos(tilt);
+  pour={target,phase:0,t:0,rt:0};BOT[0].a.ext={p:[POUR.x-mx,POUR.y-my,POUR.z],r:[0,0,tilt]};
+}
+$("d").addEventListener("input",function(){stopAuto();if(cur!==LAST)goStep(LAST);pour=null;BOT[0].a.ext=null;d=Number(this.value);updateDom(true)});
+function updateDom(force){
+  if(!force&&Math.abs(d-lastDom)<0.05)return;lastDom=d;
+  $("dv").textContent=fmt(d)+" cm";if(document.activeElement!==$("d"))$("d").value=d;
+  $("liters").textContent="Nước trong khay: 600 cm² × "+fmt(d)+" cm ≈ "+fmt(0.6*d)+" lít";
+  document.querySelectorAll(".presets [data-pour]").forEach(b=>b.setAttribute("aria-pressed",Math.abs(Number(b.dataset.pour)-d)<0.05&&d>0?"true":"false"));
+  const vis=Math.max(0,12-d);
+  $("ca").textContent=d<0.05?"Khô: thấy đủ 12 vạch.":(d<12?"Phần thước còn thấy = "+fmt(vis)+" cm\nd = 12 − "+fmt(vis)+" = "+fmt(d)+" cm":"Nước ngập hết thước (từ 12 cm).");
+  if(d>0.05&&d<2*R-0.05){const half=Math.sqrt(Math.max(0,R*R-(d-R)*(d-R))),OH=Math.abs(R-d),up=d<R;
+    $("cb").textContent="Dây cung c = AB ≈ "+fmt(2*half)+" cm\nOH = √(7² − ("+fmt(half,2)+")²) ≈ "+fmt(OH)+" cm\n"+(up?"Trục còn nổi: d = 7 − ":"Trục đã chìm: d = 7 + ")+fmt(OH)+" ≈ "+fmt(up?R-OH:R+OH)+" cm";}
+  else $("cb").textContent=d>=2*R-0.05?"Nước ngập quá bánh xe.":"Chưa ngập tới bánh xe.";
+  const L=d/Math.cos(ALPHA);
+  $("cc").textContent=d>0.05?"Phần chìm dọc cột L ≈ "+fmt(L)+" cm\nd = L · cos 20° ≈ "+fmt(L*Math.cos(ALPHA))+" cm\nQuên hiệu chỉnh thì lệch ≈ "+fmt(L-d)+" cm":"Chưa có nước.";
+}
+function updWater(dt,time){
+  const on=cur===LAST&&d>0.04;
+  waterBody.visible=surf.visible=on;
+  if(on){
+    waterBody.scale.y=d;waterBody.position.y=d/2;waterBody.material.opacity=explodeK>0.05?.12:.3;surf.position.y=d;
+    const A=0.045+(raining?0.05:0)+(pour&&pour.phase===1?0.06:0);const pa=surfGeo.attributes.position.array;
+    for(let i=0;i<pa.length;i+=3){const x=surfBase[i],z=surfBase[i+2];let y=A*(Math.sin(0.55*x+1.9*time)+Math.sin(0.8*z-1.4*time))*0.5;
+      for(const r of ripples){const dd=Math.hypot(x-r.x,z-r.z),f=dd-r.t*9;if(f<1&&f>-6)y+=r.a*Math.exp(-1.4*r.t)*Math.sin(f*2.2)*Math.exp(-0.12*dd)}
+      pa[i+1]=y}
+    surfGeo.attributes.position.needsUpdate=true;surfGeo.computeVertexNormals();
+  }
+  for(let i=ripples.length-1;i>=0;i--){ripples[i].t+=dt;if(ripples[i].t>3)ripples.splice(i,1)}
+  // dây cung
+  const show=on&&explodeK<0.05&&d<2*R-0.05;const half=show?Math.sqrt(Math.max(0,R*R-(d-R)*(d-R))):0,OH=Math.abs(R-d);
+  [chord,pA,pB].forEach(o=>o.visible=show);[ohL,pH].forEach(o=>o.visible=show&&OH>0.2);
+  if(show){const z=0.42;chord.scale.x=2*half;chord.position.set(WX,d,z);pA.position.set(WX-half,d,z);pB.position.set(WX+half,d,z);
+    lA.position.set(WX-half-1.2,d+1,z);lB.position.set(WX+half+1.2,d+1,z);ohL.scale.y=Math.max(0.01,OH);ohL.position.set(WX,(R+d)/2,z+0.05);pH.position.set(WX,d,z+0.05);lH.position.set(WX+1,d-1,z)}
+}
+function updPour(dt){
+  stream.visible=false;
+  if(!pour)return;pour.t+=dt;
+  if(pour.drain){d=Math.max(pour.target,d-3*dt);if(d<=pour.target+1e-4){d=pour.target;pour=null}return}
+  if(pour.phase===0){if(pour.t>1.3){pour.phase=1;pour.t=0}}
+  else if(pour.phase===1){d=Math.min(pour.target,d+(reduce?8:1.5)*dt);stream.visible=true;const h=POUR.y-d;stream.scale.y=h;stream.position.set(POUR.x,d+h/2,POUR.z);streamTex.offset.y+=dt*3;
+    pour.rt+=dt;if(pour.rt>0.14){pour.rt=0;ripple(POUR.x+(Math.random()-0.5),POUR.z+(Math.random()-0.5),0.22)}
+    if(d>=pour.target-1e-4){pour.phase=2;pour.t=0}}
+  else if(pour.phase===2){if(pour.t>0.4){BOT[0].a.ext=null;pour=null}}
+}
+function updRain(dt){
+  if(!raining)return;
+  for(let i=0;i<RN;i++){const o=i*6;let y=rainPos[o+1]-rv[i]*dt;const x=rainPos[o],z=rainPos[o+2];
+    const inside=Math.abs(x)<TW/2-TT&&Math.abs(z)<TD/2-TT;const floor=inside&&cur===LAST?d:Y0;
+    if(y<floor){if(inside&&cur===LAST&&Math.random()<0.18)ripple(x,z,0.1);seedDrop(i,true)}else{rainPos[o+1]=y;rainPos[o+4]=y+1.4}}
+  rainGeo.attributes.position.needsUpdate=true;
+  if(cur===LAST){d=Math.min(12,d+0.22*dt);if(d>=12)setRain(false)}
+}
+
+// ================= VÒNG LẶP =================
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+window.addEventListener("resize",resize);
+let last=performance.now();
+function tick(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;const st=(now-stepStart)/1000,time=now/1000;
+  explodeK+=(explodeTarget-explodeK)*Math.min(1,dt*(reduce?60:4));
+  updActors(dt,st);
+  // vẽ đường tròn bằng compa
+  const pr=cur===13?clamp((st-1)/3,0,1):(cur>13?1:0);ringGeo.setDrawRange(0,Math.floor(96*6*pr));
+  film.material.opacity=cur===17?0.16+0.14*Math.sin(st*5):0.16;
+  updPour(dt);updRain(dt);updWater(dt,time);updateDom(false);
+  // nhãn
+  allLabels.forEach(l=>{const k=l.userData.kind;let v=labelsOn;
+    if(k==="badge")v=v&&cur===0&&(!focusItem||focusItem===l.userData.n);
+    else if(k==="part")v=v&&cur===LAST&&mode!=="lens";
+    else if(k==="pt")v=v&&(l===lH?pH.visible:chord.visible);
+    l.visible=v});
+  // kích thước theo bước
+  const ds=STEPS[cur].dims||[];Object.keys(dimObjs).forEach(key=>dimObjs[key].visible=labelsOn&&ds.indexOf(key)>=0);
+  // mũi tên
+  const hp=focusItem?ITEMS[focusItem-1].b:STEPS[cur].hl;
+  arrow.visible=!!hp&&mode!=="lens"&&st>0.6;if(arrow.visible){arrow.position.set(hp[0],hp[1]+(focusItem?1.6:0)+0.6*Math.sin(time*4),hp[2]);arrow.rotation.y=time*1.5}
+  // giao diện camera điện thoại
+  const lv=$("level");const warn=cur===31&&st<1.9;lv.textContent=warn?"Máy nghiêng 4° · chỉnh lại":"Máy thẳng ✓";lv.classList.toggle("warn",warn);
+  if(cur===32&&mode==="lens"&&st>1.3&&!flashed){flashed=true;const f=$("flash");f.classList.remove("on");void f.offsetWidth;f.classList.add("on");$("toast").classList.add("on")}
+  if(fly){const k=Math.min(1,(now-fly.t0)/fly.dur),e=ease(k);camera.position.lerpVectors(fly.p0,fly.p1,e);controls.target.lerpVectors(fly.q0,fly.q1,e);camera.fov=fly.f0+(fly.f1-fly.f0)*e;camera.updateProjectionMatrix();if(k>=1)fly=null}
+  controls.update();renderer.render(scene,camera);requestAnimationFrame(tick);
+}
+retarget();instant=false;
+camera.position.set(...VIEWS.table.p);controls.target.set(...VIEWS.table.t);camera.fov=40;
+resize();renderStepUI();updateDom(true);setView("table");requestAnimationFrame(tick);
+window.__m={goStep,setView,startPour,setRain,state:()=>({cur,d,mode}),setWater:v=>{d=v;updateDom(true)},explode:on=>{if(on!==!!explodeTarget)$("explode").click()}};
+})();
+</script>
+
+</body>
+</html>
