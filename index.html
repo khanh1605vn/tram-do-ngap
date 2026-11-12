@@ -1059,7 +1059,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.5.1 (12/11/2026)";var PT={};
+var APP_VERSION="1.5.2 (12/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -1469,7 +1469,7 @@ function qReport(first){
   box.className="result on "+lvClass(lv);
   var where=Q.geo?("Vị trí chụp: "+(Q.place?esc(Q.place)+" · ":"")+Q.geo.lat.toFixed(4)+", "+Q.geo.lng.toFixed(4)+(Q.geo.acc?" (±"+Math.round(Q.geo.acc)+" m)":"")+(Q.geo.src==="ảnh"?" – lấy từ ảnh":"")):"Chưa có vị trí chụp.";
   box.innerHTML='<div>Cảnh báo tại vị trí chụp</div><div class="big">'+(full?"d ≥ "+fmtS(d.total):"d ≈ "+fmt(dep))+' cm · Mức '+lv+'</div>'+
-    '<div>'+(dep<1?"Không thấy nước ngập tại thước.":ADV[lv])+'</div><div class="muted" style="color:inherit;opacity:.85;margin-top:6px">'+where+'<br>Đã đọc '+d.bands+' vạch, độ tin cậy '+d.conf+' ('+d.why+'). Ước lượng từ ảnh, có thể kéo đường xanh để chỉnh.</div>';
+    '<div>'+(dep<1?"Không thấy nước ngập tại thước.":(S.mode==="k"?"Kết quả trên mô hình khay ("+hName()+"), dùng để luyện phân khoảng.":ADV[lv]))+'</div><div class="muted" style="color:inherit;opacity:.85;margin-top:6px">'+where+'<br>Đã đọc '+d.bands+' vạch, độ tin cậy '+d.conf+' ('+d.why+'). Ước lượng từ ảnh, có thể kéo đường xanh để chỉnh.</div>';
   $("qActions").style.display="";
   S.last={d:Math.round(dep*10)/10,method:"Thước",level:lv};
   // lưu / cập nhật điểm cảnh báo tại vị trí chụp
@@ -1719,11 +1719,11 @@ function renderLab(){
   // lượt cải tiến
   if(!imp.length)$("lImpv").innerHTML='<p class="muted">Chưa có lượt cải tiến. Khi đo lại sau khi chỉnh một lỗi, chọn Loại lượt “Cải tiến” và ghi điều chỉnh.</p>';
   else{
-    var h='<table><tr><th>Nhóm</th><th>Mực</th><th>PP</th><th>Điều chỉnh, dữ kiện</th><th class="num">dₜ trước</th><th class="num">dₜ sau</th><th class="num">d₀</th><th class="num">δ trước</th><th class="num">δ sau</th></tr>',sb=0,sa=0,np=0;
+    var h='<table><tr><th class="num">dₜ trước</th><th class="num">dₜ sau</th><th class="num">d₀</th><th class="num">δ trước</th><th class="num">δ sau</th></tr>',sb=0,sa=0,np=0;
     imp.forEach(function(r){
       var o=null;for(var i=0;i<rows.length;i++){var x=rows[i];if(x.k!=="Cải tiến"&&x.g===r.g&&x.lv===r.lv&&x.m===r.m&&x.d0>0){o=x;break}}
       var a=rStat(r),b=o?rStat(o):null;if(b&&a.del!=null){sb+=b.del;sa+=a.del;np++}
-      h+='<tr><td>'+esc(r.g)+'</td><td>'+esc(r.lv)+'</td><td>'+r.m+'</td><td>'+esc(r.note||"")+'</td><td class="num">'+(o?f2(o.dt):'–')+'</td><td class="num">'+f2(r.dt)+'</td><td class="num">'+f2(r.d0)+'</td><td class="num">'+(b?f2(b.del)+'%':'–')+'</td><td class="num">'+(a.del!=null?f2(a.del)+'%':'–')+'</td></tr>';
+      h+='<tr><td colspan="5" style="border-bottom:0;padding-bottom:0"><b>'+esc(r.g)+' · '+esc(r.lv)+' · PP '+r.m+'</b>'+(r.note?' <span class="muted" style="font-size:.82rem">· '+esc(r.note)+'</span>':'')+'</td></tr><tr><td class="num">'+(o?f2(o.dt):'–')+'</td><td class="num">'+f2(r.dt)+'</td><td class="num">'+f2(r.d0)+'</td><td class="num">'+(b?f2(b.del)+'%':'–')+'</td><td class="num"><b>'+(a.del!=null?f2(a.del)+'%':'–')+'</b></td></tr>';
     });
     h+='</table>'+(np?'<p class="muted">δ trung bình của '+np+' cặp trước, sau: <b>'+f2(sb/np)+'% → '+f2(sa/np)+'%</b>. Giữ các điều kiện khác ổn định để thấy tác dụng của từng điều chỉnh.</p>':'');
     $("lImpv").innerHTML=h;
