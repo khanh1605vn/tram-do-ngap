@@ -929,7 +929,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       <h2>Chế độ thử nghiệm trên khay nước</h2>
       <p class="muted">Δ = |dₜ − d₀| ; δ = Δ : d₀ × 100%. dₜ là độ sâu tính từ ảnh, d₀ là độ sâu đo thật bằng thước. Màu dₜ / d₀ tô theo ngưỡng khay hₖ.</p>
       <div class="grid">
-        <div><label for="lGroup">Mã nhóm</label><input id="lGroup" placeholder="vd N1"></div>
+        <div><label for="lGroup">Nhóm</label><input id="lGroup" placeholder="vd Nhóm 1"></div>
         <div><label for="lLevel">Mực nước</label><select id="lLevel"><option value="Khô">Ảnh khô (d₀ = 0)</option><option selected>Mực 1</option><option>Mực 2</option><option>Mực 3</option></select></div>
         <div><label for="lMethod">Phương pháp</label><select id="lMethod"><option value="A">A – trước và sau</option><option value="B">B – bánh xe</option><option value="C">C – hiệu chỉnh nghiêng</option></select></div>
         <div><label for="lKind">Loại lượt</label><select id="lKind"><option>Ban đầu</option><option>Cải tiến</option></select></div>
@@ -1059,7 +1059,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.5.0 (12/11/2026)";var PT={};
+var APP_VERSION="1.5.1 (12/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -1676,7 +1676,7 @@ function f2(x){return fmt(x,2)}
 $("lAdd").onclick=function(){
   showErr("lErr","");$("lMsg").textContent="";
   var g=$("lGroup").value.trim(),dt=num($("lDt").value),d0=num($("lD0").value),lv=$("lLevel").value;
-  if(!g)return showErr("lErr","Nhập mã nhóm (không ghi họ tên).");
+  if(!g)return showErr("lErr","Nhập tên nhóm, ví dụ Nhóm 1 (không ghi họ tên học sinh).");
   if(lv==="Khô"&&isNaN(d0)){d0=0;$("lD0").value="0"}
   if(!(dt>=0)||!(d0>=0))return showErr("lErr","dₜ và d₀ phải là số không âm.");
   if(d0===0&&lv!=="Khô")return showErr("lErr","d₀ = 0 chỉ dùng cho ảnh khô: chọn “Ảnh khô” ở ô Mực nước.");
@@ -1783,13 +1783,13 @@ function importLab(texts,nf){
 $("lImp").onclick=function(){$("lFile").value="";$("lFile").click()};
 $("lFile").onchange=function(){readFiles(this.files,importLab)};
 // bộ dữ liệu mẫu 54 lượt và 6 lượt cải tiến (Phụ lục 6 của hồ sơ)
-var SMP={A:{N1:[428,372,296],N2:[432,366,304],N3:[424,376,288],N4:[436,364,292],N5:[426,378,312],N6:[418,362,284]},
- B:{N1:[12.45,13.63,12.24],N2:[11.76,13.47,13.08],N3:[12.92,13.42,11.63],N4:[11.63,13.86,13.29],N5:[12.55,13.67,11.88],N6:[11.49,13.29,11.2]},
- C:{N1:[3.51,7.24,11.17],N2:[4.15,6.49,9.9],N3:[3.19,7.66,11.81],N4:[3.94,6.39,11.49],N5:[3.09,8.09,9.68],N6:[4.58,6.17,12.45]},
- IMP:[["N1",13.95,"Bổ sung ánh sáng cho hai đầu dây cung"],["N2",13.96,"Cố định điện thoại trên giá"],["N3",13.96,"Đặt lại thẻ tỉ lệ cùng mặt phẳng"],["N4",13.95,"Chờ mặt nước phẳng trước khi chụp"],["N5",13.97,"Chỉnh mặt máy song song với đĩa"],["N6",13.95,"Phóng lớn ảnh khi chọn hai đầu dây"]]};
+var SMP={A:{"Nhóm 1":[428,372,296],"Nhóm 2":[432,366,304],"Nhóm 3":[424,376,288],"Nhóm 4":[436,364,292],"Nhóm 5":[426,378,312],"Nhóm 6":[418,362,284]},
+ B:{"Nhóm 1":[12.45,13.63,12.24],"Nhóm 2":[11.76,13.47,13.08],"Nhóm 3":[12.92,13.42,11.63],"Nhóm 4":[11.63,13.86,13.29],"Nhóm 5":[12.55,13.67,11.88],"Nhóm 6":[11.49,13.29,11.2]},
+ C:{"Nhóm 1":[3.51,7.24,11.17],"Nhóm 2":[4.15,6.49,9.9],"Nhóm 3":[3.19,7.66,11.81],"Nhóm 4":[3.94,6.39,11.49],"Nhóm 5":[3.09,8.09,9.68],"Nhóm 6":[4.58,6.17,12.45]},
+  IMP:[["Nhóm 1",13.95,"Bổ sung ánh sáng cho hai đầu dây cung"],["Nhóm 2",13.96,"Cố định điện thoại trên giá"],["Nhóm 3",13.96,"Đặt lại thẻ tỉ lệ cùng mặt phẳng"],["Nhóm 4",13.95,"Chờ mặt nước phẳng trước khi chụp"],["Nhóm 5",13.97,"Chỉnh mặt máy song song với đĩa"],["Nhóm 6",13.95,"Phóng lớn ảnh khi chọn hai đầu dây"]]};
 function sampleRows(){
   var out=[],D0=[3.5,6.5,10],cs=Math.cos(20*Math.PI/180);
-  ["A","B","C"].forEach(function(m){["N1","N2","N3","N4","N5","N6"].forEach(function(g){SMP[m][g].forEach(function(x,i){
+  ["A","B","C"].forEach(function(m){["Nhóm 1","Nhóm 2","Nhóm 3","Nhóm 4","Nhóm 5","Nhóm 6"].forEach(function(g){SMP[m][g].forEach(function(x,i){
     var dt,note;
     if(m==="A"){dt=25-0.05*x;note="p′ = "+fmtS(x)+" px"}
     else if(m==="B"){dt=7+(i===2?1:-1)*Math.sqrt(49-x*x/4);note="c = "+fmtS(x)+" cm"}
