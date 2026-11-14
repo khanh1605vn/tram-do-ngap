@@ -1074,7 +1074,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.5.4 (14/11/2026)";var PT={};
+var APP_VERSION="1.5.5 (14/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -1089,6 +1089,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 // ---------- helpers ----------
 function num(v){if(v==null)return NaN;v=String(v).trim().replace(/\s/g,"").replace(",",".");if(v==="")return NaN;return Number(v)}
 function fmt(x,n){if(n==null)n=1;return (Math.round(x*Math.pow(10,n))/Math.pow(10,n)).toFixed(n).replace(".",",")}
+function fmtK(x){var s=fmt(x,4).replace(/0+$/,"").replace(/,$/,"");return s}
 function fmtS(x){var s=fmt(x,2);s=s.replace(/,?0+$/,"");return s}
 function activeH(){return S.mode==="k"?S.hk:S.hx}
 function hName(){return S.mode==="k"?"hₖ = "+fmtS(S.hk)+" cm · mô hình khay":"hₓ = "+fmtS(S.hx)+" cm · đường thực tế"}
@@ -1144,7 +1145,7 @@ function calcA(){
   if(!(l2>0))return showErr("aErr","Nhập ℓ′ – độ dài thẻ tỉ lệ trên ảnh, hoặc chạm đủ 4 điểm trên ảnh.");
   var k=l/l2,p=k*p2,d=H-p;
   if(p>H)return showErr("aErr","Phần nổi thật ("+fmt(p)+" cm) lớn hơn H: kiểm tra lại ảnh hoặc chiều cao vật mốc.");
-  steps("aSteps","k = ℓ : ℓ′ = "+fmtS(l)+" : "+fmtS(l2)+" = "+fmtS(k)+"\np = k · p′ = "+fmtS(k)+" · "+fmtS(p2)+" = "+fmt(p)+" cm\nd = H − p = "+fmtS(H)+" − "+fmt(p)+" = "+fmt(d)+" cm");
+  steps("aSteps","k = ℓ : ℓ′ = "+fmtS(l)+" : "+fmtS(l2)+" = "+fmtK(k)+"\np = k · p′ = "+fmtK(k)+" · "+fmtS(p2)+" = "+fmt(p)+" cm\nd = H − p = "+fmtS(H)+" − "+fmt(p)+" = "+fmt(d)+" cm");
   showResult("aRes",d,"A");
   return d;
 }
@@ -1254,7 +1255,7 @@ function PhotoTool(rootId,mode){
   function toImg(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height,r:r}}
   cv.addEventListener("pointerdown",function(e){
     if(!img)return;e.preventDefault();
-    var p=toImg(e),k=cssScale(),best=-1,bd=30*k;
+    var p=toImg(e),k=cssScale(),best=-1,bd=(pts.length<4?14:30)*k;
     pts.forEach(function(o,i){var d=Math.hypot(o.x-p.x,o.y-p.y);if(d<bd){bd=d;best=i}});
     if(best<0){if(pts.length>=4)return;pts.push({x:p.x,y:p.y});best=pts.length-1}
     drag=best;try{cv.setPointerCapture(e.pointerId)}catch(_){}
@@ -1303,7 +1304,10 @@ function PhotoTool(rootId,mode){
       }
     }
   }
-  q(".ptReset").onclick=function(){pts=[];q(".ptMeas").textContent="";draw()};
+  q(".ptReset").onclick=function(){pts=[];q(".ptMeas").textContent="";
+    var ids=mode==="A"?["aL2","aP2"]:(mode==="B"?["bC2","bK"]:["cVis","cAng"]);ids.forEach(function(i){$(i).value=""});
+    var m=mode.toLowerCase();hideRes(m+"Res");steps(m+"Steps","");showErr(m+"Err","");if(mode==="B"){showErr("bWarn","");$("bSvg").innerHTML=""}
+    draw()};
   if(mode==="B"){
     q(".ptNoCard").onchange=function(){var on=this.checked;q(".ptWheel").style.display=on?"":"none";q(".ptCard").style.display=on?"none":"";pts=[];q(".ptMeas").textContent="";if(img)draw()};
     q(".ptType").onchange=function(){if(this.value){$("bD").value=this.value;$("bR").value=""}if(noCard()&&pts.length===4)applyWheel()};
@@ -1663,7 +1667,7 @@ function calcB(){
   var R=num($("bR").value),D=num($("bD").value),c=num($("bC").value),c2=num($("bC2").value),k=num($("bK").value),axis=$("bAxis").value;
   var lines=[];
   if(!(R>0)&&D>0){R=D/2;lines.push("R = D : 2 = "+fmtS(D)+" : 2 = "+fmtS(R)+" cm")}
-  if(!(c>0)&&c2>0&&k>0){c=k*c2;lines.push("c = k · c′ = "+fmtS(k)+" · "+fmtS(c2)+" = "+fmt(c)+" cm")}
+  if(!(c>0)&&c2>0&&k>0){c=k*c2;lines.push("c = k · c′ = "+fmtK(k)+" · "+fmtS(c2)+" = "+fmt(c)+" cm")}
   if(!(R>0))return showErr("bErr","Nhập bán kính R hoặc đường kính D (lớn hơn 0).");
   if(!(c>0))return showErr("bErr","Nhập dây cung thật c, hoặc c′ trên ảnh cùng hệ số k (lớn hơn 0).");
   if(c>2*R+1e-9)return showErr("bErr","Dây cung không thể dài hơn đường kính (c = "+fmtS(c)+" cm > 2R = "+fmtS(2*R)+" cm).");
