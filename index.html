@@ -761,6 +761,7 @@ body.pg #pgWrap{display:block;background:#fff;color:#000;padding:16px;min-height
 .chk{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:.95rem;margin:10px 0 2px}
 .chk input{width:auto}
 .leaflet-control-layers{color:#222;font-size:.85rem}
+.leaflet-control-layers-toggle,.leaflet-retina .leaflet-control-layers-toggle{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a6aa1' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 3 2 8l10 5 10-5-10-5z'/%3E%3Cpath d='m2 13 10 5 10-5'/%3E%3C/svg%3E")!important;background-size:24px 24px!important;background-repeat:no-repeat;background-position:center}
 .leaflet-control-layers label{display:block;margin:2px 0;color:#222;font-size:.85rem;cursor:pointer}
 .leaflet-control-layers input{width:auto;padding:0;margin:0 6px 0 0;border:0;vertical-align:middle}
 
@@ -843,6 +844,20 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       <div class="row" id="qActions" style="display:none;margin-top:10px"><button class="btn" id="qMap" type="button">Xem trên bản đồ</button><button class="btn ghost" id="qShare" type="button">Gửi cảnh báo</button></div>
       <div class="row" id="qTools" style="display:none;margin-top:8px"><button class="btn ghost" id="qRedo" type="button">Tự đo lại</button><button class="btn ghost" id="qManual" type="button">Đo bằng tay</button><button class="btn ghost" id="qSave" type="button">Lưu ảnh</button></div>
       <p class="muted" id="qShareMsg"></p>
+    </div>
+    <div class="card">
+      <h2>Ảnh không có thước – đoán theo vật quen thuộc</h2>
+      <p class="muted">Dùng cho ảnh chụp sẵn, ảnh trên báo hoặc khi không kịp đặt thước. Chọn vật có trong ảnh, app tự lấy kích thước thường gặp của vật đó; em chỉ cần nhìn ảnh và chọn nước ngập tới đâu. Kết quả là một khoảng ước lượng, kém chính xác hơn đo bằng thước.</p>
+      <div class="row"><button class="btn ghost" id="gPick" type="button">Chọn ảnh để xem</button></div>
+      <input type="file" id="gFile" accept="image/*" hidden>
+      <img id="gImg" alt="Ảnh đang xem" style="display:none;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);margin-top:8px">
+      <div class="grid" style="margin-top:8px">
+        <div><label for="gObj">Vật có trong ảnh</label><select id="gObj"></select></div>
+        <div><label for="gLv">Nước ngập tới đâu?</label><select id="gLv"></select></div>
+      </div>
+      <p class="muted" id="gInfo" style="margin:6px 0 0"></p>
+      <div class="result" id="gRes"></div>
+      <p class="muted" style="margin:8px 0 0">Ảnh có bánh xe nhìn gần thẳng: vào Phương pháp B, bật “Ảnh không có thẻ tỉ lệ” để đo kỹ hơn. Cột điện, cột đèn không dùng làm chuẩn được vì mỗi nơi một cỡ và không có vạch chia.</p>
     </div>
     <div class="card">
       <h2>Làm thước đo ngập</h2>
@@ -1059,7 +1074,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <script>
 (function(){
 "use strict";
-var APP_VERSION="1.5.2 (12/11/2026)";var PT={};
+var APP_VERSION="1.5.4 (14/11/2026)";var PT={};
 var $=function(id){return document.getElementById(id)};
 // ---------- storage ----------
 var KEY="tramdongap.v1";
@@ -1123,8 +1138,10 @@ Array.prototype.forEach.call(document.querySelectorAll("[data-mode]"),function(b
 function calcA(){
   hideRes("aRes");steps("aSteps","");showErr("aErr","");
   var H=num($("aH").value),l=num($("aL").value),l2=num($("aL2").value),p2=num($("aP2").value);
-  if(!(H>0&&l>0&&p2>=0)||isNaN(p2))return showErr("aErr","Mọi độ dài phải là số lớn hơn 0 (p′ có thể bằng 0).");
-  if(!(l2>0))return showErr("aErr","ℓ′ phải khác 0.");
+  if(!(H>0))return showErr("aErr","Chưa nhập H – chiều cao thật của vật mốc (cm). Phương pháp A cần biết H và cần thẻ tỉ lệ trong ảnh. Ảnh không có hai thứ này (ví dụ ảnh trên báo) thì chuyển sang Phương pháp B và bật “Ảnh không có thẻ tỉ lệ” nếu ảnh có bánh xe.");
+  if(!(l>0))return showErr("aErr","Nhập ℓ – độ dài thật của thẻ tỉ lệ (lớn hơn 0).");
+  if(!(p2>=0)||isNaN(p2))return showErr("aErr","Nhập p′ – phần còn nổi trên ảnh, hoặc chạm đủ 4 điểm trên ảnh.");
+  if(!(l2>0))return showErr("aErr","Nhập ℓ′ – độ dài thẻ tỉ lệ trên ảnh, hoặc chạm đủ 4 điểm trên ảnh.");
   var k=l/l2,p=k*p2,d=H-p;
   if(p>H)return showErr("aErr","Phần nổi thật ("+fmt(p)+" cm) lớn hơn H: kiểm tra lại ảnh hoặc chiều cao vật mốc.");
   steps("aSteps","k = ℓ : ℓ′ = "+fmtS(l)+" : "+fmtS(l2)+" = "+fmtS(k)+"\np = k · p′ = "+fmtS(k)+" · "+fmtS(p2)+" = "+fmt(p)+" cm\nd = H − p = "+fmtS(H)+" − "+fmt(p)+" = "+fmt(d)+" cm");
@@ -1140,10 +1157,17 @@ var PT_STEPS={
   C:["Chạm đầu thứ nhất của thẻ tỉ lệ","Chạm đầu thứ hai của thẻ tỉ lệ","Chạm đỉnh vật mốc (đầu còn nổi)","Chạm điểm vật mốc gặp mặt nước"]
 };
 var PT_INTRO={
-  A:"Đặt thẻ tỉ lệ sát vật mốc, đứng ở nơi khô ráo, giữ máy thẳng rồi chụp. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi đỉnh và chân phần vật mốc còn nổi.",
+  A:"Đặt thẻ tỉ lệ sát vật mốc, đứng ở nơi khô ráo, giữ máy thẳng rồi chụp. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi đỉnh và chân phần vật mốc còn nổi. Ảnh không có thẻ tỉ lệ thì dùng Phương pháp B (bánh xe).",
   B:"Đặt thẻ tỉ lệ sát bánh xe, chụp thẳng vào mặt bánh xe. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi 2 điểm mặt nước cắt vành bánh xe.",
   C:"Đặt thẻ tỉ lệ dọc theo vật mốc, chụp thẳng. Sau đó chạm 4 điểm: 2 đầu thẻ, rồi đỉnh vật mốc và điểm vật mốc gặp mặt nước. App đo phần còn nổi và góc nghiêng so với phương thẳng đứng."
 };
+var PT_WHEEL=["Chạm điểm thứ nhất trên mép ngoài lốp (phần còn nổi)","Chạm điểm thứ hai trên mép ngoài lốp, cách xa điểm đầu","Chạm điểm thứ ba trên mép ngoài lốp","Chạm điểm mặt nước gặp bánh xe"];
+function circ3(a,b,c){
+  var d=2*(a.x*(b.y-c.y)+b.x*(c.y-a.y)+c.x*(a.y-b.y));if(Math.abs(d)<1e-6)return null;
+  var A=a.x*a.x+a.y*a.y,B=b.x*b.x+b.y*b.y,C=c.x*c.x+c.y*c.y;
+  var ux=(A*(b.y-c.y)+B*(c.y-a.y)+C*(a.y-b.y))/d,uy=(A*(c.x-b.x)+B*(a.x-c.x)+C*(b.x-a.x))/d;
+  return {x:ux,y:uy,r:Math.hypot(a.x-ux,a.y-uy)};
+}
 var camStream=null,camOwner=null;
 function stopCam(){
   if(camStream){camStream.getTracks().forEach(function(t){t.stop()});camStream=null}
@@ -1163,7 +1187,10 @@ function PhotoTool(rootId,mode){
   var root=$(rootId),T=this;
   root.innerHTML=
     '<p class="muted">'+PT_INTRO[mode]+' Ảnh chỉ xử lý trên máy này, không tải lên mạng.</p>'+
-    (mode!=="A"?'<div style="max-width:240px"><label>ℓ – độ dài thật thẻ tỉ lệ (cm)</label><input class="ptL" inputmode="decimal" value="10"></div>':'')+
+    (mode==="B"?'<label style="display:flex;gap:8px;align-items:flex-start;margin:8px 0;font-weight:600"><input type="checkbox" class="ptNoCard" style="width:auto;margin-top:4px"><span>Ảnh không có thẻ tỉ lệ (dùng chính vành bánh xe làm chuẩn)</span></label>'+
+      '<div class="ptWheel" style="display:none"><p class="muted" style="margin:0 0 6px">Dùng khi ảnh nhìn gần thẳng vào mặt bánh xe. Chọn loại bánh xe, rồi chạm 3 điểm trên mép ngoài lốp phần còn nổi và 1 điểm mặt nước gặp bánh xe. App dựng đường tròn đi qua 3 điểm (tâm là giao ba đường trung trực) để tìm tâm và tỉ lệ k = R : r′.</p>'+
+      '<div style="max-width:340px"><label>Loại bánh xe (đường kính gợi ý)</label><select class="ptType"><option value="">– tự nhập R hoặc D ở trên –</option><option value="43">Xe tay ga bánh nhỏ, vành 10 inch · D ≈ 43 cm</option><option value="52">Xe tay ga, vành 14 inch · D ≈ 52 cm</option><option value="57">Xe tay ga bánh lớn, vành 16 inch · D ≈ 57 cm</option><option value="58">Xe số phổ thông, vành 17 inch · D ≈ 58 cm</option><option value="60">Xe côn tay, vành 17 inch lốp to · D ≈ 60 cm</option><option value="66">Xe đạp người lớn, bánh 26 inch · D ≈ 66 cm</option></select></div></div>':'')+
+    (mode!=="A"?'<div class="ptCard" style="max-width:240px"><label>ℓ – độ dài thật thẻ tỉ lệ (cm)</label><input class="ptL" inputmode="decimal" value="10"></div>':'')+
     '<div class="row" style="margin-top:8px"><button class="btn ptCam" type="button">Mở camera</button>'+
     '<button class="btn ghost ptPick" type="button">Chọn ảnh có sẵn</button>'+
     '<button class="btn ghost ptReset" type="button" style="display:none">Chạm lại</button>'+
@@ -1178,6 +1205,7 @@ function PhotoTool(rootId,mode){
   var q=function(c){return root.querySelector(c)};
   T.camBox=q(".cam");var video=q("video"),stage=q(".stage"),cv=q("canvas.ph"),lp=q("canvas.loupe"),ctx=cv.getContext("2d"),lctx=lp.getContext("2d");
   var img=null,pts=[],drag=-1,facing="environment";
+  var noCard=function(){var c=q(".ptNoCard");return !!(c&&c.checked)};
   var err=function(m){var e=q(".ptErr");e.textContent=m||"";e.classList.toggle("on",!!m)};
   var cssScale=function(){var r=cv.getBoundingClientRect();return r.width?cv.width/r.width:1};
 
@@ -1193,14 +1221,24 @@ function PhotoTool(rootId,mode){
     ctx.drawImage(img,0,0,cv.width,cv.height);
     var k=cssScale(),r=7*k,lw=2.5*k;
     ctx.lineWidth=lw;
+    var nc=noCard();
+    if(nc){
+      var ci=pts.length>=3?circ3(pts[0],pts[1],pts[2]):null;
+      if(ci&&ci.r<4*Math.max(cv.width,cv.height)){
+        ctx.strokeStyle="#ffcc00";ctx.beginPath();ctx.arc(ci.x,ci.y,ci.r,0,7);ctx.stroke();
+        ctx.fillStyle="#ffcc00";ctx.beginPath();ctx.arc(ci.x,ci.y,3*k,0,7);ctx.fill();
+        if(pts.length>=4){var hh=pts[3].y-ci.y;if(Math.abs(hh)<ci.r){var hw=Math.sqrt(ci.r*ci.r-hh*hh);ctx.strokeStyle="#00d0ff";ctx.beginPath();ctx.moveTo(ci.x-hw,pts[3].y);ctx.lineTo(ci.x+hw,pts[3].y);ctx.stroke()}}
+      }
+    }else{
     if(pts.length>=2){ctx.strokeStyle="#ffcc00";ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);ctx.stroke()}
     if(pts.length>=4){ctx.strokeStyle="#00d0ff";ctx.beginPath();ctx.moveTo(pts[2].x,pts[2].y);ctx.lineTo(pts[3].x,pts[3].y);ctx.stroke()}
+    }
     pts.forEach(function(p,i){
-      ctx.fillStyle=i<2?"#ffcc00":"#00d0ff";ctx.strokeStyle="#000";ctx.lineWidth=1.5*k;
+      ctx.fillStyle=(nc?i<3:i<2)?"#ffcc00":"#00d0ff";ctx.strokeStyle="#000";ctx.lineWidth=1.5*k;
       ctx.beginPath();ctx.arc(p.x,p.y,r,0,7);ctx.fill();ctx.stroke();
       ctx.fillStyle="#000";ctx.font="bold "+Math.round(10*k)+"px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(i+1),p.x,p.y+0.5*k);
     });
-    q(".ptHint").textContent=pts.length<4?("Bước "+(pts.length+1)+"/4: "+PT_STEPS[mode][pts.length]+". Giữ ngón tay và kéo để chỉnh cho chính xác."):"Đã đủ 4 điểm. Kéo điểm để chỉnh, hoặc bấm “Chạm lại”.";
+    q(".ptHint").textContent=pts.length<4?("Bước "+(pts.length+1)+"/4: "+(nc?PT_WHEEL:PT_STEPS[mode])[pts.length]+". Giữ ngón tay và kéo để chỉnh cho chính xác."):"Đã đủ 4 điểm. Kéo điểm để chỉnh, hoặc bấm “Chạm lại”.";
   }
   function loupe(p,clientX,rect){
     lp.style.display="block";
@@ -1230,14 +1268,26 @@ function PhotoTool(rootId,mode){
   var up=function(){if(drag<0)return;drag=-1;lp.style.display="none";draw();if(pts.length===4)apply()};
   cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
 
+  function applyWheel(){
+    var M=q(".ptMeas"),ci=circ3(pts[0],pts[1],pts[2]);
+    if(!ci||ci.r>4*Math.max(cv.width,cv.height)){M.textContent="Ba điểm trên mép lốp gần thẳng hàng nên chưa dựng được đường tròn. Kéo ba điểm ra xa nhau hơn trên vành bánh.";return}
+    var h=pts[3].y-ci.y;
+    if(Math.abs(h)>=ci.r){M.textContent="Điểm mặt nước đang nằm ngoài đường tròn bánh xe. Kéo lại điểm 4 vào chỗ mặt nước gặp bánh xe, hoặc chỉnh ba điểm trên mép lốp.";return}
+    var c2=2*Math.sqrt(ci.r*ci.r-h*h),R=num($("bR").value);if(!(R>0))R=num($("bD").value)/2;
+    $("bC").value="";$("bC2").value=fmt(c2,1);$("bAxis").value=h<0?"down":"up";
+    var t="Đường tròn qua 3 điểm có bán kính r′ ≈ "+fmt(ci.r,1)+" điểm ảnh; dây cung tại mặt nước c′ ≈ "+fmt(c2,1)+" điểm ảnh; "+(h<0?"mặt nước cao hơn trục (trục đã chìm).":"mặt nước thấp hơn trục (trục còn nổi).");
+    if(R>0){var k=R/ci.r;$("bK").value=fmt(k,4);M.textContent=t+" k = R : r′ = "+fmtS(R)+" : "+fmt(ci.r,1)+" ≈ "+fmt(k,4)+" cm/điểm ảnh. Kết quả là ước lượng: ảnh chụp chéo làm bánh xe méo thành hình elip nên sai số tăng.";calcB()}
+    else{$("bK").value="";M.textContent=t+" Chọn loại bánh xe, hoặc nhập R hay D, để tính độ sâu."}
+  }
   function apply(){
+    if(noCard())return applyWheel();
     var d=function(a,b){return Math.hypot(a.x-b.x,a.y-b.y)};
     var card=d(pts[0],pts[1]),seg=d(pts[2],pts[3]);
     if(card<3){q(".ptMeas").textContent="Hai đầu thẻ tỉ lệ quá gần nhau, hãy chạm lại.";return}
     if(mode==="A"){
       $("aL2").value=fmt(card,1);$("aP2").value=fmt(seg,1);
       q(".ptMeas").textContent="Đã điền ℓ′ = "+fmt(card,1)+" và p′ = "+fmt(seg,1)+" (đơn vị: điểm ảnh).";
-      if(num($("aH").value)>0)calcA();else q(".ptMeas").textContent+=" Nhập H rồi bấm “Tính độ sâu”.";
+      if(num($("aH").value)>0)calcA();else q(".ptMeas").textContent+=" Nhập H (chiều cao thật của vật mốc) ở ô phía trên rồi bấm “Tính độ sâu”.";
     }else{
       var l=num(q(".ptL").value);if(!(l>0)){q(".ptMeas").textContent="Nhập độ dài thật của thẻ tỉ lệ ℓ.";return}
       var k=l/card;
@@ -1254,6 +1304,11 @@ function PhotoTool(rootId,mode){
     }
   }
   q(".ptReset").onclick=function(){pts=[];q(".ptMeas").textContent="";draw()};
+  if(mode==="B"){
+    q(".ptNoCard").onchange=function(){var on=this.checked;q(".ptWheel").style.display=on?"":"none";q(".ptCard").style.display=on?"none":"";pts=[];q(".ptMeas").textContent="";if(img)draw()};
+    q(".ptType").onchange=function(){if(this.value){$("bD").value=this.value;$("bR").value=""}if(noCard()&&pts.length===4)applyWheel()};
+    T.pre=function(){if(noCard()&&img&&pts.length===4){applyWheel();return true}return false};
+  }
   q(".ptSave").onclick=function(){
     try{var a=document.createElement("a");a.href=cv.toDataURL("image/jpeg",0.9);a.download="tram-do-ngap-"+mode+"-"+Date.now()+".jpg";document.body.appendChild(a);a.click();a.remove()}catch(_){err("Không lưu được ảnh trên trình duyệt này.")}
   };
@@ -1641,7 +1696,7 @@ function drawWheel(R,d,c){
   '<line x1="'+(W-25)+'" y1="'+base+'" x2="'+(W-25)+'" y2="'+wy+'" stroke="'+br+'" stroke-width="2"/>'+
   '<text x="'+(W-60)+'" y="'+((base+wy)/2+4)+'" font-size="13" fill="'+br+'">d</text></svg>';
 }
-$("bCalc").onclick=calcB;
+$("bCalc").onclick=function(){if(!(PT.B&&PT.B.pre&&PT.B.pre()))calcB()};
 
 // ---------- method C ----------
 function calcC(){
@@ -1873,7 +1928,7 @@ function initMap(){
       });
     });
     map.on("baselayerchange",function(e){BASES.forEach(function(b,i){if(b[1]===e.layer){bi=i;okTiles=0;badTiles=0}})});
-    L.control.layers(baseObj,null,{collapsed:false,position:"topright"}).addTo(map);
+    L.control.layers(baseObj,null,{collapsed:window.innerWidth<700,position:"topright"}).addTo(map);
     mapStatus();
     layer=L.layerGroup().addTo(map);
     setTimeout(function(){map.invalidateSize()},300);
@@ -1954,14 +2009,14 @@ function renderPins(){
   $("mTable").innerHTML=h;
   Array.prototype.forEach.call($("mTable").querySelectorAll("[data-pdel]"),function(b){b.onclick=function(){S.pins.splice(+b.dataset.pdel,1);save();renderPins()}});
   var hx=S.hx;$("mHx").textContent=fmtS(hx);
-  $("mLegend").innerHTML=pill("Xanh")+' d &lt; '+fmtS(hx/2)+' cm '+pill("Vàng")+' '+fmtS(hx/2)+' ≤ d &lt; '+fmtS(hx)+' cm '+pill("Đỏ")+' d ≥ '+fmtS(hx)+' cm '+pill("Chưa đủ dữ kiện")+' thiếu vật chuẩn hoặc khoảng cắt qua ranh giới';
+  $("mLegend").innerHTML=pill("Xanh")+' d &lt; '+fmtS(hx/2)+' cm '+pill("Vàng")+' '+fmtS(hx/2)+' ≤ d &lt; '+fmtS(hx)+' cm '+pill("Đỏ")+' d ≥ '+fmtS(hx)+' cm '+'<span style="white-space:nowrap">'+pill("Chưa đủ dữ kiện")+'</span> thiếu vật chuẩn hoặc khoảng cắt qua ranh giới';
 }
 $("mGrid").onclick=function(){if(offlineOn)return;showGrid(!gridOn)};
 $("mSample").onclick=function(){
   S.pins=S.pins.filter(function(p){return !p.s});
   SMAP.forEach(function(q){var p=Object.assign({},q,{when:"T₀",lat:null,lng:null,s:1});p.lv=q.lv||classify(q.dep,q.dep2,false);if(p.dep2==null)delete p.dep2;S.pins.push(p)});
   save();showGrid(true);
-  $("mHint").textContent="Đã nạp sơ đồ tình huống mẫu tại T₀, xếp mức theo hₓ = "+fmtS(S.hx)+" cm (hồ sơ dùng hₓ = 30 cm). Tên đường A–H là mã giả định. Ngoài thực tế, chờ thông báo của nhà trường và người lớn trước khi chọn tuyến.";
+  $("mHint").textContent="Đã nạp sơ đồ tình huống mẫu tại T₀, xếp mức theo hₓ = "+fmtS(S.hx)+" cm"+(S.hx===30?"":" (hồ sơ dùng hₓ = 30 cm)")+". Tên đường A–H là mã giả định. Ngoài thực tế, chờ thông báo của nhà trường và người lớn trước khi chọn tuyến.";
 };
 function pinKey(p){return [p.code||"",p.name,p.lat==null?"":(+p.lat).toFixed(5),p.lng==null?"":(+p.lng).toFixed(5),p.fx==null?"":(+p.fx).toFixed(3),p.fy==null?"":(+p.fy).toFixed(3),p.when||""].join("|")}
 function importPins(texts,nf){
@@ -2002,7 +2057,7 @@ function showFound(list){
   list.slice(0,5).forEach(function(it){
     var b=document.createElement("button");b.type="button";b.className="btn ghost";
     b.style.cssText="display:block;width:100%;text-align:left;font-weight:400;margin-top:4px";
-    b.textContent=it.label;b.onclick=function(){fly(it.lat,it.lng,it.label)};box.appendChild(b);
+    b.textContent=it.label;b.onclick=function(){box.innerHTML="";fly(it.lat,it.lng,it.label)};box.appendChild(b);
   });
 }
 $("mFindBtn").onclick=function(){
@@ -2023,6 +2078,50 @@ $("mFind").addEventListener("keydown",function(e){if(e.key==="Enter")$("mFindBtn
 $("mCsv").onclick=function(){var r=[["Ma diem","Duong/doan duong","Muc","Do sau tu (cm)","Do sau den (cm)","Thoi diem","Nguon","Ghi chu","Vi do","Kinh do","X so do","Y so do"]];S.pins.forEach(function(p){r.push([p.code||"",p.name,p.lv,p.dep==null?"":p.dep,p.inf?"":(p.dep2==null?"":p.dep2),p.when||"",p.src||"",(p.inf?"trên mức này; ":"")+(p.note||""),p.lat==null?"":(+p.lat).toFixed(5),p.lng==null?"":(+p.lng).toFixed(5),p.fx==null?"":(+p.fx).toFixed(4),p.fy==null?"":(+p.fy).toFixed(4)])});download("diem-ngap-"+(S.cls||"lop")+".csv",csv(r))};
 $("mPrint").onclick=function(){window.print()};
 $("mRetry").onclick=retryMap;
+
+
+// ---------- đoán theo vật quen thuộc (ảnh không có thước) ----------
+var GOBJ=[
+ {n:"Xe số phổ thông, bánh 17 inch",D:58,ax:28},
+ {n:"Xe tay ga, bánh 14 inch",D:52,ax:25},
+ {n:"Xe tay ga bánh nhỏ, bánh 10 inch",D:43,ax:21},
+ {n:"Xe tay ga bánh lớn, bánh 16 inch",D:57,ax:28},
+ {n:"Xe đạp người lớn, bánh 26 inch",D:66,ax:33},
+ {n:"Ô tô con, lốp 185/65R15",D:62,ax:30},
+ {n:"Người lớn đứng trong nước (cao khoảng 1,6 m)",body:1}
+];
+var GBODY=[["Tới mắt cá chân",5,10],["Giữa ống chân",18,28],["Ngang đầu gối",40,50],["Giữa đùi",55,70],["Ngang hông",75,90]];
+function gLevels(o){
+  if(o.body)return GBODY.map(function(x){return {t:x[0],a:x[1],b:x[2]}});
+  var D=o.D,ax=o.ax,r=function(x){return Math.round(x)};
+  return [
+   {t:"Chỉ ướt mặt lốp, dưới 1/4 bánh",a:1,b:r(D/4)-1},
+   {t:"Khoảng 1/4 bánh, còn thấp hơn trục",a:r(D/4),b:ax-4},
+   {t:"Ngang trục bánh xe (nửa bánh)",a:ax-3,b:ax+3},
+   {t:"Quá trục, tới khoảng 3/4 bánh",a:ax+4,b:r(D*3/4)},
+   {t:"Gần ngập hết bánh",a:r(D*3/4),b:D},
+   {t:"Ngập hết bánh xe",a:D,b:null}
+  ];
+}
+function gFill(){
+  var o=GOBJ[+$("gObj").value],L=gLevels(o);
+  $("gLv").innerHTML='<option value="">– chọn –</option>'+L.map(function(x,i){return '<option value="'+i+'">'+esc(x.t)+'</option>'}).join("");
+  $("gInfo").textContent=o.body?"Mốc trên cơ thể người lớn cao khoảng 1,6 m: mắt cá 5–10 cm, đầu gối 40–50 cm, hông 75–90 cm. Người cao thấp khác nhau nên sai lệch có thể tới 10 cm.":"App lấy đường kính bánh D ≈ "+o.D+" cm, trục cao khoảng "+o.ax+" cm so với mặt đường (số đo thường gặp của loại xe này).";
+  $("gRes").className="result";
+}
+function gCalc(){
+  var o=GOBJ[+$("gObj").value],i=$("gLv").value,r=$("gRes");if(i===""){r.className="result";return}
+  var x=gLevels(o)[+i],lv=classify(x.a,x.b,x.b==null),txt=x.b==null?"từ "+x.a+" cm trở lên":x.a+"–"+x.b+" cm";
+  r.className="result on "+lvClass(lv);
+  r.innerHTML='<div>Độ sâu nước đoán theo '+(o.body?"cơ thể người":"bánh xe")+'</div><div class="big">d ≈ '+txt+'</div><div><b>'+(lv==="Chưa đủ dữ kiện"?"Chưa đủ dữ kiện":"Mức "+lv)+'</b> (hₓ = '+fmtS(S.hx)+' cm): '+(lv==="Chưa đủ dữ kiện"?"Khoảng ước lượng cắt qua ranh giới màu. Cần đo kỹ hơn bằng Phương pháp B hoặc bằng thước; trong lúc chờ, coi như mức cao hơn và tránh đoạn đường này.":ADV[lv])+'</div>'+
+   '<div class="row noprint" style="margin-top:10px"><button class="btn ghost" type="button" data-gmap>Ghim lên bản đồ</button><button class="btn ghost" type="button" data-gb>Đo kỹ hơn bằng bánh xe</button></div>';
+  r.querySelector("[data-gmap]").onclick=function(){$("mLevel").value="auto";$("mDepth").value=String(x.a);$("mDepth2").value=x.b==null?"":String(x.b);$("mNote").value="Đoán theo "+(o.body?"người đứng trong nước":"bánh xe")+": "+x.t.toLowerCase();go("map")};
+  r.querySelector("[data-gb]").onclick=function(){go("B")};
+}
+$("gObj").innerHTML=GOBJ.map(function(o,i){return '<option value="'+i+'">'+esc(o.n)+'</option>'}).join("");
+$("gObj").onchange=gFill;$("gLv").onchange=gCalc;gFill();
+$("gPick").onclick=function(){$("gFile").click()};
+$("gFile").onchange=function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var im=$("gImg");im.src=URL.createObjectURL(f);im.style.display="block";e.target.value=""};
 
 // ---------- settings ----------
 function fillCfg(){$("gHk").value=fmtS(S.hk);$("gMode").value=S.mode;$("gHx").value=fmtS(S.hx);$("gClass").value=S.cls;$("gEdges").value=S.edges.map(fmtS).join("; ");$("gTarget").value=fmtS(S.target);$("gUnrel").value=fmtS(S.unrel);$("gCenter").value=S.center.join("; ");var G=gaugeCfg();$("gBand").value=fmtS(G.band);$("gBandN").value=G.n;$("gBandW").value=fmtS(G.w)}
